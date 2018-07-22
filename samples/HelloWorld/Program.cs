@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using PixelCannon;
 using static GLFWDotNet.GLFW;
 
@@ -30,6 +31,8 @@ namespace HelloWorld
 
             var context = new PixelCannonContext(glfwGetProcAddress);
 
+            Init(context);
+
             bool done = false;
             while (!done)
             {
@@ -49,9 +52,19 @@ namespace HelloWorld
             glfwTerminate();
         }
 
+        private static Texture texture;
+
+        private static void Init(PixelCannonContext context)
+        {
+            texture = context.LoadTexture("Box.tga");
+        }
+
         private static void Draw(PixelCannonContext context)
         {
             context.Clear(Color.Red);
+            context.Begin();
+            context.Draw(texture, Vector2.Zero);
+            context.End();
         }
     }
 }

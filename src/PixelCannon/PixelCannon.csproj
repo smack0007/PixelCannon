@@ -9,5 +9,6 @@
   </ItemGroup>
 
   <Import Project="$(RepositoryRootDirectory)ext\GLDotNet\GLDotNet.targets" />
+  <Import Project="$(RepositoryRootDirectory)ext\ImageDotNet\ImageDotNet.targets" />
 
 </Project>

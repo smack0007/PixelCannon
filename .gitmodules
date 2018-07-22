@@ -4,3 +4,6 @@
 [submodule "ext/GLDotNet"]
 	path = ext/GLDotNet
 	url = https://github.com/smack0007/GLDotNet.git
+[submodule "ext/ImageDotNet"]
+	path = ext/ImageDotNet
+	url = https://github.com/smack0007/ImageDotNet.git
