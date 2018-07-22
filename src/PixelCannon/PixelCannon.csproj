@@ -8,8 +8,6 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\ext\GLDotNet\src\GLDotNet\GLDotNet.csproj" />
-  </ItemGroup>
+  <Import Project="$(RepositoryRootDirectory)ext\GLDotNet\GLDotNet.targets" />
 
 </Project>
