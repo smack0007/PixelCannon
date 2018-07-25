@@ -49,6 +49,8 @@ namespace HelloWorld
                 glfwSwapBuffers(window);
             }
 
+            Shutdown(context);
+
             glfwTerminate();
         }
 
@@ -61,10 +63,16 @@ namespace HelloWorld
 
         private static void Draw(PixelCannonContext context)
         {
-            context.Clear(Color.Red);
+            context.Clear(Color.Black);
+
             context.Begin();
-            context.Draw(texture, Vector2.Zero);
+            context.Draw(ref texture, new Rectangle(0, 0, texture.Width * 2, texture.Height * 2), tint: new Color(1, 1, 1, 0.2f));
             context.End();
+        }
+
+        private static void Shutdown(PixelCannonContext context)
+        {
+            context.FreeTexture(ref texture);
         }
     }
 }

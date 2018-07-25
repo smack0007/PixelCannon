@@ -2,11 +2,11 @@
 {
     public struct Texture
     {
-        internal uint Handle { get; }
+        public uint Handle { get; }
 
-        internal int Width { get; }
+        public int Width { get; }
 
-        internal int Height { get; }
+        public int Height { get; }
 
         internal Texture(uint handle, int width, int height)
         {

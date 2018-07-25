@@ -14,7 +14,7 @@ namespace PixelCannon
             public static readonly int SizeInBytes = Marshal.SizeOf<Vertex>();
 
             public Vector3 Position;
-            public Vector4 Color;
+            public Color Color;
             public Vector2 UV;
         }
 
@@ -33,7 +33,7 @@ namespace PixelCannon
         private int vertTranformLocation;
         private int fragSamplerLocation;
 
-        bool drawInProgress;
+        private bool drawInProgress;
 
         Matrix4x4 transform = new Matrix4x4()
         {
@@ -94,12 +94,15 @@ namespace PixelCannon
             this.vertTranformLocation = glGetUniformLocation(this.program, "vertTransform");
             this.fragSamplerLocation = glGetUniformLocation(this.program, "fragSampler");
 
-            glEnable(GL_DEPTH_TEST);
-            glDepthFunc(GL_LESS);
-
             glDisable(GL_CULL_FACE);
             glCullFace(GL_BACK);
             glFrontFace(GL_CW);
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LEQUAL);
         }
 
         ~PixelCannonContext()
@@ -129,15 +132,29 @@ namespace PixelCannon
             // NOTE: Assuming image is an RGBImage for now.
             var image = Image.LoadTga(fileName);
 
+            uint format = GL_RGBA;
+
+            switch (image)
+            {
+                case RgbImage r:
+                    format = GL_RGB;
+                    break;
+            }
+
             using (var data = image.GetDataPointer())
             {
-                glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGB, image.Width, image.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, data.Pointer);
+                glTexImage2D(GL_TEXTURE_2D, 0, (int)format, image.Width, image.Height, 0, format, GL_UNSIGNED_BYTE, data.Pointer);
             }
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
 
             return new Texture(texture, image.Width, image.Height);
+        }
+
+        public void FreeTexture(ref Texture texture)
+        {
+            glDeleteTexture(texture.Handle);
         }
 
         public void Clear(Color color)
@@ -161,13 +178,6 @@ namespace PixelCannon
         {
             if (this.drawInProgress)
                 throw new InvalidOperationException("Draw already in progress.");
-
-            //this.graphics.BlendEnabled = true;
-            //this.graphics.SourceBlendFactor = SourceBlendFactor.SourceAlpha;
-            //this.graphics.DestinationBlendFactor = DestinationBlendFactor.OneMinusSourceAlpha;
-
-            //this.graphics.DepthBufferEnabled = true;
-            //this.graphics.DepthFunction = DepthFunction.LessThanOrEqual;
 
             this.drawInProgress = true;
         }
@@ -201,7 +211,7 @@ namespace PixelCannon
             ref Vector2 bottomRight,
             ref Vector2 bottomLeft,
             Rectangle source,
-            Vector4 color,
+            Color color,
             float layerDepth)
         {
             if (this.vertexCount == this.vertices.Length)
@@ -227,10 +237,10 @@ namespace PixelCannon
         }
 
         public void Draw(
-            Texture texture,
+            ref Texture texture,
             Vector2 destination,
             Rectangle? source = null,
-            Vector4? tint = null,
+            Color? tint = null,
             Vector2? origin = null,
             Vector2? scale = null,
             float rotation = 0.0f,
@@ -238,7 +248,7 @@ namespace PixelCannon
         {
             this.DrawInternal(
                 ref texture,
-                destination,
+                ref destination,
                 source != null ? source.Value.Width : texture.Width,
                 source != null ? source.Value.Height : texture.Height,
                 source,
@@ -249,28 +259,30 @@ namespace PixelCannon
                 layerDepth);
         }
 
-        //public void Draw(
-        //    Texture2D texture,
-        //    Rectangle destination,
-        //    Rectangle? source = null,
-        //    Color4? tint = null,
-        //    Vector2? origin = null,
-        //    Vector2? scale = null,
-        //    float rotation = 0.0f,
-        //    float layerDepth = 0.0f)
-        //{
-        //    this.DrawInternal(
-        //        texture,
-        //        new Vector2(destination.X, destination.Y),
-        //        destination.Width,
-        //        destination.Height,
-        //        source,
-        //        tint,
-        //        origin,
-        //        scale,
-        //        rotation,
-        //        layerDepth);
-        //}
+        public void Draw(
+            ref Texture texture,
+            Rectangle destination,
+            Rectangle? source = null,
+            Color? tint = null,
+            Vector2? origin = null,
+            Vector2? scale = null,
+            float rotation = 0.0f,
+            float layerDepth = 0.0f)
+        {
+            var vecDestination = new Vector2(destination.X, destination.Y);
+
+            this.DrawInternal(
+                ref texture,
+                ref vecDestination,
+                destination.Width,
+                destination.Height,
+                source,
+                tint,
+                origin,
+                scale,
+                rotation,
+                layerDepth);
+        }
 
         //public void Draw(
         //    SpriteSheet spriteSheet,
@@ -302,11 +314,11 @@ namespace PixelCannon
 
         private void DrawInternal(
             ref Texture texture,
-            Vector2 destination,
+            ref Vector2 destination,
             int width,
             int height,
             Rectangle? source,
-            Vector4? tint,
+            Color? tint,
             Vector2? origin,
             Vector2? scale,
             float rotation,
@@ -323,7 +335,7 @@ namespace PixelCannon
                 source = new Rectangle(0, 0, texture.Width, texture.Height);
 
             if (tint == null)
-                tint = Vector4.One;
+                tint = Color.White;
 
             if (origin == null)
                 origin = Vector2.Zero;
