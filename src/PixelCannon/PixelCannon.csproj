@@ -5,10 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="GLDotNet" Version="18.7.0" />
+    <PackageReference Include="ImageDotNet" Version="18.7.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
   </ItemGroup>
-
-  <Import Project="$(RepositoryRootDirectory)ext\GLDotNet\GLDotNet.targets" />
-  <Import Project="$(RepositoryRootDirectory)ext\ImageDotNet\ImageDotNet.targets" />
 
 </Project>

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Numerics;
+using System.Reflection;
 using PixelCannon;
 using static GLFWDotNet.GLFW;
 
@@ -9,6 +11,8 @@ namespace HelloWorld
     {
         static void Main(string[] args)
         {
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
             if (glfwInit() == 0)
             {
                 Console.Error.WriteLine($"{nameof(glfwInit)} failed!");

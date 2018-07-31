@@ -1,9 +1,8 @@
 <Project>
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-    <Import Project="$(RepositoryRootDirectory)ext\GLFWDotNet\GLFWDotNet.targets" />
-
     <ItemGroup>
+        <PackageReference Include="GLFWDotNet" Version="18.7.0" />
         <ProjectReference Include="$(RepositoryRootDirectory)src\PixelCannon\PixelCannon.csproj" />
     </ItemGroup>
 </Project>
