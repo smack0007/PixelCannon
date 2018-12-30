@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace PixelCannon
 {
-    public sealed class Font : DisposableObject
+    public sealed class TextureFont : DisposableObject
     {
         public class Character
         {
@@ -39,11 +39,11 @@ namespace PixelCannon
 
         public int LineHeight { get; private set; }
 
-        public Font()
+        public TextureFont()
         {
         }
 
-        public static Font LoadFromStream(GraphicsContext graphics, Stream stream, Func<string, Texture> loadTexture)
+        public static TextureFont LoadFromStream(GraphicsContext graphics, Stream stream, Func<string, Texture> loadTexture)
         {
             if (graphics == null)
                 throw new ArgumentNullException(nameof(graphics));
@@ -59,9 +59,9 @@ namespace PixelCannon
             return ParseXml(doc, loadTexture);
         }
 
-        private static Font ParseXml(XDocument doc, Func<string, Texture> loadTexture)
+        private static TextureFont ParseXml(XDocument doc, Func<string, Texture> loadTexture)
         {
-            var font = new Font();
+            var font = new TextureFont();
 
             foreach (var element in doc.Root.Elements())
             {
@@ -96,7 +96,7 @@ namespace PixelCannon
             return font;
         }
 
-        private static void ParseXmlChar(Font font, XElement charElement)
+        private static void ParseXmlChar(TextureFont font, XElement charElement)
         {
             int id = charElement.AttributeValueAsInt32("id");
 

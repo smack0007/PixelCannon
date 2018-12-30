@@ -18,24 +18,24 @@ namespace PixelCannon
             public Vector2 UV;
         }
 
-        private Color clearColor = Color.Black;
+        private Color _clearColor = Color.Black;
 
-        private Vertex[] vertices;
-        private int vertexCount;
+        private Vertex[] _vertices;
+        private int _vertexCount;
 
-        private Texture texture;
+        private Texture _texture;
 
-        private uint vertexBuffer;
-        private uint indexBuffer;
-        private uint vertexArray;
+        private uint _vertexBuffer;
+        private uint _indexBuffer;
+        private uint _vertexArray;
 
-        private uint program;
-        private int vertTranformLocation;
-        private int fragSamplerLocation;
+        private uint _program;
+        private int _vertTranformLocation;
+        private int _fragSamplerLocation;
 
-        private bool drawInProgress;
+        private bool _drawInProgress;
 
-        Matrix4x4 transform = new Matrix4x4()
+        Matrix4x4 _transform = new Matrix4x4()
         {
             M33 = 1.0f,
             M44 = 1.0f,
@@ -53,17 +53,17 @@ namespace PixelCannon
 
             glInit(getProcAddress, 4, 0);
 
-            glClearColor(this.clearColor.R, this.clearColor.G, this.clearColor.B, this.clearColor.A);
+            glClearColor(_clearColor.R, _clearColor.G, _clearColor.B, _clearColor.A);
 
-            this.vertices = new Vertex[maxSprites * 4];
+            _vertices = new Vertex[maxSprites * 4];
 
-            this.vertexBuffer = glGenBuffer();
-            glBindBuffer(GL_ARRAY_BUFFER, this.vertexBuffer);
-            glBufferData(GL_ARRAY_BUFFER, Vertex.SizeInBytes * this.vertices.Length, IntPtr.Zero, GL_DYNAMIC_DRAW);
+            _vertexBuffer = glGenBuffer();
+            glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+            glBufferData(GL_ARRAY_BUFFER, Vertex.SizeInBytes * _vertices.Length, IntPtr.Zero, GL_DYNAMIC_DRAW);
             GLUtility.CheckErrors(nameof(glBufferData));
 
-            this.vertexArray = glGenVertexArray();
-            glBindVertexArray(this.vertexArray);
+            _vertexArray = glGenVertexArray();
+            glBindVertexArray(_vertexArray);
             glVertexAttribPointer(0, 3, GL_FLOAT, false, Vertex.SizeInBytes, IntPtr.Zero);
             GLUtility.CheckErrors(nameof(glVertexAttribPointer));
             glVertexAttribPointer(1, 4, GL_FLOAT, false, Vertex.SizeInBytes, (IntPtr)Marshal.SizeOf<Vector3>());
@@ -85,17 +85,17 @@ namespace PixelCannon
                 indices[i + 5] = (ushort)(vertex + 3);
             }
 
-            this.indexBuffer = glGenBuffer();
-            glBindBuffer(GL_ARRAY_BUFFER, this.indexBuffer);
+            _indexBuffer = glGenBuffer();
+            glBindBuffer(GL_ARRAY_BUFFER, _indexBuffer);
             glBufferData(GL_ARRAY_BUFFER, sizeof(ushort) * indices.Length, indices, GL_STATIC_DRAW);
             GLUtility.CheckErrors(nameof(glBufferData));
 
             uint vertexShader = GLUtility.CreateAndCompileShader(GL_VERTEX_SHADER, VertexShaderCode);
             uint fragmentShader = GLUtility.CreateAndCompileShader(GL_FRAGMENT_SHADER, FragmentShaderCode);
-            this.program = GLUtility.CreateAndLinkProgram(vertexShader, fragmentShader);
+            _program = GLUtility.CreateAndLinkProgram(vertexShader, fragmentShader);
 
-            this.vertTranformLocation = glGetUniformLocation(this.program, "vertTransform");
-            this.fragSamplerLocation = glGetUniformLocation(this.program, "fragSampler");
+            _vertTranformLocation = glGetUniformLocation(_program, "vertTransform");
+            _fragSamplerLocation = glGetUniformLocation(_program, "fragSampler");
 
             glDisable(GL_CULL_FACE);
             glCullFace(GL_BACK);
@@ -110,20 +110,20 @@ namespace PixelCannon
 
         ~GraphicsContext()
         {
-            this.Dispose(false);
+            Dispose(false);
         }
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         private void Dispose(bool disposing)
         {
-            glDeleteBuffer(this.vertexBuffer);
-            glDeleteBuffer(this.indexBuffer);
-            glDeleteVertexArray(this.vertexArray);
+            glDeleteBuffer(_vertexBuffer);
+            glDeleteBuffer(_indexBuffer);
+            glDeleteVertexArray(_vertexArray);
         }
 
         public Texture LoadTexture(string fileName)
@@ -162,10 +162,10 @@ namespace PixelCannon
 
         public void Clear(Color color)
         {
-            if (color != this.clearColor)
+            if (color != _clearColor)
             {
-                this.clearColor = color;
-                glClearColor(this.clearColor.R, this.clearColor.G, this.clearColor.B, this.clearColor.A);
+                _clearColor = color;
+                glClearColor(_clearColor.R, _clearColor.G, _clearColor.B, _clearColor.A);
             }
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -173,33 +173,33 @@ namespace PixelCannon
 
         private void EnsureDrawInProgress()
         {
-            if (!this.drawInProgress)
+            if (!_drawInProgress)
                 throw new InvalidOperationException("Draw not currently in progress.");
         }
 
         public void Begin()
         {
-            if (this.drawInProgress)
+            if (_drawInProgress)
                 throw new InvalidOperationException("Draw already in progress.");
 
-            this.drawInProgress = true;
+            _drawInProgress = true;
         }
 
         public void End()
         {
-            this.EnsureDrawInProgress();
+            EnsureDrawInProgress();
 
-            this.Flush();
+            Flush();
 
-            this.drawInProgress = false;
+            _drawInProgress = false;
         }
 
         private void CalculateUV(float x, float y, ref Vector2 uv)
         {
-            if (this.texture.Width != 1 || this.texture.Height != 1)
+            if (_texture.Width != 1 || _texture.Height != 1)
             {
-                uv.X = x / this.texture.Width;
-                uv.Y = y / this.texture.Height;
+                uv.X = x / _texture.Width;
+                uv.Y = y / _texture.Height;
             }
             else
             {
@@ -217,26 +217,26 @@ namespace PixelCannon
             Color color,
             float layerDepth)
         {
-            if (this.vertexCount == this.vertices.Length)
-                this.Flush();
+            if (_vertexCount == _vertices.Length)
+                Flush();
 
-            this.vertices[this.vertexCount].Position = new Vector3(topLeft, layerDepth);
-            this.CalculateUV(source.Left, source.Top, ref this.vertices[this.vertexCount].UV);
-            this.vertices[this.vertexCount].Color = color;
+            _vertices[_vertexCount].Position = new Vector3(topLeft, layerDepth);
+            CalculateUV(source.Left, source.Top, ref _vertices[_vertexCount].UV);
+            _vertices[_vertexCount].Color = color;
 
-            this.vertices[this.vertexCount + 1].Position = new Vector3(topRight, layerDepth);
-            this.CalculateUV(source.Right, source.Top, ref this.vertices[this.vertexCount + 1].UV);
-            this.vertices[this.vertexCount + 1].Color = color;
+            _vertices[_vertexCount + 1].Position = new Vector3(topRight, layerDepth);
+            CalculateUV(source.Right, source.Top, ref _vertices[_vertexCount + 1].UV);
+            _vertices[_vertexCount + 1].Color = color;
 
-            this.vertices[this.vertexCount + 2].Position = new Vector3(bottomRight, layerDepth);
-            this.CalculateUV(source.Right, source.Bottom, ref this.vertices[this.vertexCount + 2].UV);
-            this.vertices[this.vertexCount + 2].Color = color;
+            _vertices[_vertexCount + 2].Position = new Vector3(bottomRight, layerDepth);
+            CalculateUV(source.Right, source.Bottom, ref _vertices[_vertexCount + 2].UV);
+            _vertices[_vertexCount + 2].Color = color;
 
-            this.vertices[this.vertexCount + 3].Position = new Vector3(bottomLeft, layerDepth);
-            this.CalculateUV(source.Left, source.Bottom, ref this.vertices[this.vertexCount + 3].UV);
-            this.vertices[this.vertexCount + 3].Color = color;
+            _vertices[_vertexCount + 3].Position = new Vector3(bottomLeft, layerDepth);
+            CalculateUV(source.Left, source.Bottom, ref _vertices[_vertexCount + 3].UV);
+            _vertices[_vertexCount + 3].Color = color;
 
-            this.vertexCount += 4;
+            _vertexCount += 4;
         }
 
         public void DrawSprite(
@@ -301,10 +301,10 @@ namespace PixelCannon
         {
             EnsureDrawInProgress();
 
-            if (texture != this.texture)
-                this.Flush();
+            if (texture != _texture)
+                Flush();
 
-            this.texture = texture;
+            _texture = texture;
 
             if (source == null)
                 source = new Rectangle(0, 0, texture.Width, texture.Height);
@@ -334,7 +334,7 @@ namespace PixelCannon
             bottomRight = Vector2.Transform(bottomRight, transform);
             bottomLeft = Vector2.Transform(bottomLeft, transform);
 
-            this.AddQuad(
+            AddQuad(
                 ref topLeft,
                 ref topRight,
                 ref bottomRight,
@@ -345,7 +345,7 @@ namespace PixelCannon
         }
 
         public Vector2 DrawString(
-            Font font,
+            TextureFont font,
             string text,
             Vector2 position,
             int lineSpacing = 0,
@@ -368,7 +368,7 @@ namespace PixelCannon
             if (textSize == null)
                 textSize = font.MeasureString(text);
 
-            return this.DrawString(
+            return DrawString(
                 font,
                 text,
                 new Rectangle((int)position.X, (int)position.Y, textSize.Value.Width, textSize.Value.Height),
@@ -381,7 +381,7 @@ namespace PixelCannon
         }
 
         public Vector2 DrawString(
-            Font font,
+            TextureFont font,
             string text,
             Rectangle destination,
             int lineSpacing = 0,
@@ -452,7 +452,7 @@ namespace PixelCannon
                     (int)widthOfCharacter,
                     (int)heightOfCharacter);
 
-                this.DrawSprite(
+                DrawSprite(
                     font.Texture,
                     letterDestination,
                     letterSource,
@@ -470,34 +470,34 @@ namespace PixelCannon
 
         private void Flush()
         {
-            if (this.vertexCount > 0)
+            if (_vertexCount > 0)
             {
                 Rectangle viewport = new Rectangle();
                 glGetIntegerv(GL_VIEWPORT, ref viewport.X);
-                this.transform.M11 = 2f / viewport.Width;
-                this.transform.M22 = -2f / viewport.Height;
+                _transform.M11 = 2f / viewport.Width;
+                _transform.M22 = -2f / viewport.Height;
 
-                glBindBuffer(GL_ARRAY_BUFFER, this.vertexBuffer);
-                glBufferData(GL_ARRAY_BUFFER, Vertex.SizeInBytes * this.vertexCount, this.vertices, GL_DYNAMIC_DRAW);
+                glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+                glBufferData(GL_ARRAY_BUFFER, Vertex.SizeInBytes * _vertexCount, _vertices, GL_DYNAMIC_DRAW);
                 GLUtility.CheckErrors(nameof(glBufferData));
 
-                glBindVertexArray(this.vertexArray);
+                glBindVertexArray(_vertexArray);
 
-                glUseProgram(this.program);
+                glUseProgram(_program);
 
-                glUniformMatrix4fv(this.vertTranformLocation, 1, false, ref this.transform.M11);
+                glUniformMatrix4fv(_vertTranformLocation, 1, false, ref _transform.M11);
                 GLUtility.CheckErrors(nameof(glUniformMatrix4fv));
 
                 glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, this.texture.Handle);
-                glUniform1i(this.fragSamplerLocation, 0);
+                glBindTexture(GL_TEXTURE_2D, _texture.Handle);
+                glUniform1i(_fragSamplerLocation, 0);
                 GLUtility.CheckErrors(nameof(glUniform1ui));
 
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-                glDrawElements(GL_TRIANGLES, (this.vertexCount / 4) * 6, GL_UNSIGNED_SHORT, IntPtr.Zero);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer);
+                glDrawElements(GL_TRIANGLES, (_vertexCount / 4) * 6, GL_UNSIGNED_SHORT, IntPtr.Zero);
                 GLUtility.CheckErrors(nameof(glDrawElements));
 
-                this.vertexCount = 0;
+                _vertexCount = 0;
             }
         }
 
