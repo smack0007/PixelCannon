@@ -132,21 +132,33 @@ namespace PixelCannon
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture);
 
-            // NOTE: Assuming image is an RGBImage for now.
-            var image = Image.LoadTga(fileName);
+            IImage image = null;
 
-            uint format = GL_RGBA;
-
-            switch (image)
+            if (fileName.EndsWith(".tga"))
             {
-                case RgbImage r:
-                    format = GL_RGB;
-                    break;
+                image = Image.LoadTga(fileName);
+            }
+            else if (fileName.EndsWith(".png"))
+            {
+                image = Image.LoadPng(fileName);
+            }
+            
+            if (image == null)
+                throw new PixelCannonException("Unsupported image type.");
+
+            bool updateAlpha = image.BytesPerPixel != 4;
+
+            image = image.To<Rgba32>();
+
+            if (updateAlpha)
+            {
+                for (int i = 0; i < image.Length; i++)
+                    ((Image<Rgba32>)image)[i].A = 255;
             }
 
             using (var data = image.GetDataPointer())
             {
-                glTexImage2D(GL_TEXTURE_2D, 0, (int)format, image.Width, image.Height, 0, format, GL_UNSIGNED_BYTE, data.Pointer);
+                glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, image.Width, image.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.Pointer);
             }
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
