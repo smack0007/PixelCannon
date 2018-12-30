@@ -1,6 +1,6 @@
 ﻿namespace PixelCannon
 {
-    public struct Texture
+    public sealed class Texture : DisposableObject
     {
         public uint Handle { get; }
 
@@ -10,9 +10,9 @@
 
         internal Texture(uint handle, int width, int height)
         {
-            this.Handle = handle;
-            this.Width = width;
-            this.Height = height;
+            Handle = handle;
+            Width = width;
+            Height = height;
         }
     }
 }

@@ -33,7 +33,7 @@ namespace HelloWorld
 
             glfwMakeContextCurrent(window);
 
-            var context = new PixelCannonContext(glfwGetProcAddress);
+            var context = new GraphicsContext(glfwGetProcAddress);
 
             Init(context);
 
@@ -60,23 +60,23 @@ namespace HelloWorld
 
         private static Texture texture;
 
-        private static void Init(PixelCannonContext context)
+        private static void Init(GraphicsContext context)
         {
             texture = context.LoadTexture("Box.tga");
         }
 
-        private static void Draw(PixelCannonContext context)
+        private static void Draw(GraphicsContext context)
         {
             context.Clear(Color.Black);
 
             context.Begin();
-            context.Draw(ref texture, new Rectangle(0, 0, texture.Width * 2, texture.Height * 2), tint: new Color(1, 1, 1, 0.2f));
+            context.DrawSprite(texture, new Rectangle(0, 0, texture.Width * 2, texture.Height * 2), tint: new Color(1, 1, 1, 0.2f));
             context.End();
         }
 
-        private static void Shutdown(PixelCannonContext context)
+        private static void Shutdown(GraphicsContext context)
         {
-            context.FreeTexture(ref texture);
+            context.FreeTexture(texture);
         }
     }
 }

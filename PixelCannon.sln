@@ -3,21 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{8A1D92EE-633A-4F5D-B2C0-D8B73853541E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PixelCannon", "PixelCannon", "{8A1D92EE-633A-4F5D-B2C0-D8B73853541E}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{86434E73-E670-425D-B886-CC90EFE24461}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PixelCannon", "src\PixelCannon\PixelCannon.csproj", "{B83317FE-D3CD-4699-AF4B-F3F76F115AEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PixelCannon", "src\PixelCannon\PixelCannon.csproj", "{B83317FE-D3CD-4699-AF4B-F3F76F115AEA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{EDBC2B3F-FFBA-4018-BA06-54DB520A7534}"
 	ProjectSection(SolutionItems) = preProject
 		samples\Directory.Build.props = samples\Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "samples\HelloWorld\HelloWorld.csproj", "{8D862BBA-66CC-471C-85B6-DD8196C63E43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld", "samples\HelloWorld\HelloWorld.csproj", "{8D862BBA-66CC-471C-85B6-DD8196C63E43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

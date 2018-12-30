@@ -6,13 +6,13 @@ using static GLDotNet.GL;
 
 namespace PixelCannon
 {
-    public class PixelCannonContext
+    public class GraphicsContext
     {
         [StructLayout(LayoutKind.Sequential)]
         struct Vertex
         {
-            public static readonly int SizeInBytes = Marshal.SizeOf<Vertex>();
-
+            public static int SizeInBytes => Marshal.SizeOf<Vertex>();
+            
             public Vector3 Position;
             public Color Color;
             public Vector2 UV;
@@ -43,14 +43,17 @@ namespace PixelCannon
             M42 = 1.0f
         };
 
-        public PixelCannonContext(Func<string, IntPtr> getProcAddress, int maxSprites = 1024)
+        public GraphicsContext(Func<string, IntPtr> getProcAddress, int maxSprites = 1024)
         {
-            glInit(getProcAddress, 4, 0);
-
-            glClearColor(this.clearColor.R, this.clearColor.G, this.clearColor.B, this.clearColor.A);
+            if (getProcAddress == null)
+                throw new ArgumentNullException(nameof(getProcAddress));
 
             if (maxSprites <= 0)
                 throw new ArgumentOutOfRangeException(nameof(maxSprites), $"{nameof(maxSprites)} must be >= 1.");
+
+            glInit(getProcAddress, 4, 0);
+
+            glClearColor(this.clearColor.R, this.clearColor.G, this.clearColor.B, this.clearColor.A);
 
             this.vertices = new Vertex[maxSprites * 4];
 
@@ -105,7 +108,7 @@ namespace PixelCannon
             glDepthFunc(GL_LEQUAL);
         }
 
-        ~PixelCannonContext()
+        ~GraphicsContext()
         {
             this.Dispose(false);
         }
@@ -152,7 +155,7 @@ namespace PixelCannon
             return new Texture(texture, image.Width, image.Height);
         }
 
-        public void FreeTexture(ref Texture texture)
+        public void FreeTexture(Texture texture)
         {
             glDeleteTexture(texture.Handle);
         }
@@ -236,8 +239,8 @@ namespace PixelCannon
             this.vertexCount += 4;
         }
 
-        public void Draw(
-            ref Texture texture,
+        public void DrawSprite(
+            Texture texture,
             Vector2 destination,
             Rectangle? source = null,
             Color? tint = null,
@@ -246,8 +249,8 @@ namespace PixelCannon
             float rotation = 0.0f,
             float layerDepth = 0.0f)
         {
-            this.DrawInternal(
-                ref texture,
+            DrawSpriteInternal(
+                texture,
                 ref destination,
                 source != null ? source.Value.Width : texture.Width,
                 source != null ? source.Value.Height : texture.Height,
@@ -259,8 +262,8 @@ namespace PixelCannon
                 layerDepth);
         }
 
-        public void Draw(
-            ref Texture texture,
+        public void DrawSprite(
+            Texture texture,
             Rectangle destination,
             Rectangle? source = null,
             Color? tint = null,
@@ -271,8 +274,8 @@ namespace PixelCannon
         {
             var vecDestination = new Vector2(destination.X, destination.Y);
 
-            this.DrawInternal(
-                ref texture,
+            DrawSpriteInternal(
+                texture,
                 ref vecDestination,
                 destination.Width,
                 destination.Height,
@@ -284,36 +287,8 @@ namespace PixelCannon
                 layerDepth);
         }
 
-        //public void Draw(
-        //    SpriteSheet spriteSheet,
-        //    int frame,
-        //    Vector2 position,
-        //    Color4? tint = null,
-        //    Vector2? origin = null,
-        //    Vector2? scale = null,
-        //    float rotation = 0.0f,
-        //    float layerDepth = 0.0f)
-        //{
-        //    if (spriteSheet == null)
-        //        throw new ArgumentNullException("spriteSheet");
-
-        //    Rectangle frameRect = spriteSheet[frame];
-
-        //    this.DrawInternal(
-        //        spriteSheet.Texture,
-        //        position,
-        //        frameRect.Width,
-        //        frameRect.Height,
-        //        frameRect,
-        //        tint,
-        //        origin,
-        //        scale,
-        //        rotation,
-        //        layerDepth);
-        //}
-
-        private void DrawInternal(
-            ref Texture texture,
+        private void DrawSpriteInternal(
+            Texture texture,
             ref Vector2 destination,
             int width,
             int height,
@@ -324,9 +299,9 @@ namespace PixelCannon
             float rotation,
             float layerDepth)
         {
-            this.EnsureDrawInProgress();
+            EnsureDrawInProgress();
 
-            if (texture.Handle != this.texture.Handle)
+            if (texture != this.texture)
                 this.Flush();
 
             this.texture = texture;
@@ -369,109 +344,129 @@ namespace PixelCannon
                 layerDepth);
         }
 
-        //public Vector2 DrawString(
-        //    TextureFont font,
-        //    string text,
-        //    Vector2 position,
-        //    Color4? tint = null,
-        //    Vector2? origin = null,
-        //    Vector2? scale = null,
-        //    float rotation = 0.0f,
-        //    float layerDepth = 0.0f)
-        //{
-        //    if (font == null)
-        //        throw new ArgumentNullException("font");
+        public Vector2 DrawString(
+            Font font,
+            string text,
+            Vector2 position,
+            int lineSpacing = 0,
+            Size? textSize = null,
+            Color? tint = null,
+            Vector2? origin = null,
+            Vector2? scale = null,
+            float rotation = 0.0f,
+            float layerDepth = 0.0f)
+        {
+            if (font == null)
+                throw new ArgumentNullException("font");
 
-        //    if (text == null)
-        //        throw new ArgumentNullException("text");
+            if (text == null)
+                throw new ArgumentNullException("text");
 
-        //    if (text.Length == 0)
-        //        return position;
+            if (text.Length == 0)
+                return position;
 
-        //    Size textSize = font.MeasureString(text);
+            if (textSize == null)
+                textSize = font.MeasureString(text);
 
-        //    return this.DrawString(font, text, new Rectangle((int)position.X, (int)position.Y, textSize.Width, textSize.Height), tint, origin, scale, rotation, layerDepth);
-        //}
+            return this.DrawString(
+                font,
+                text,
+                new Rectangle((int)position.X, (int)position.Y, textSize.Value.Width, textSize.Value.Height),
+                lineSpacing,
+                tint,
+                origin,
+                scale,
+                rotation,
+                layerDepth);
+        }
 
-        //public Vector2 DrawString(
-        //    TextureFont font,
-        //    string text,
-        //    Rectangle destination,
-        //    Color4? tint = null,
-        //    Vector2? origin = null,
-        //    Vector2? scale = null,
-        //    float rotation = 0.0f,
-        //    float layerDepth = 0.0f)
-        //{
-        //    if (font == null)
-        //        throw new ArgumentNullException("font");
+        public Vector2 DrawString(
+            Font font,
+            string text,
+            Rectangle destination,
+            int lineSpacing = 0,
+            Color? tint = null,
+            Vector2? origin = null,
+            Vector2? scale = null,
+            float rotation = 0.0f,
+            float layerDepth = 0.0f)
+        {
+            if (font == null)
+                throw new ArgumentNullException("font");
 
-        //    if (text == null)
-        //        throw new ArgumentNullException("text");
+            if (text == null)
+                throw new ArgumentNullException("text");
 
-        //    if (text.Length == 0)
-        //        return new Vector2(destination.X, destination.Y);
+            if (text.Length == 0)
+                return new Vector2(destination.X, destination.Y);
 
-        //    if (tint == null)
-        //        tint = Color4.White;
+            if (tint == null)
+                tint = Color.White;
 
-        //    if (origin == null)
-        //        origin = Vector2.Zero;
+            if (origin == null)
+                origin = Vector2.Zero;
 
-        //    if (scale == null)
-        //        scale = Vector2.One;
+            if (scale == null)
+                scale = Vector2.One;
 
-        //    float heightOfSingleLine = font.LineHeight * scale.Value.Y;
+            float heightOfSingleLine = font.LineHeight * scale.Value.Y;
 
-        //    if (heightOfSingleLine > destination.Height) // We can't draw anything
-        //        return new Vector2(destination.X, destination.Y);
+            if (heightOfSingleLine > destination.Height) // We can't draw anything
+                return new Vector2(destination.X, destination.Y);
 
-        //    Vector2 cursor = new Vector2(destination.X, destination.Y);
+            Vector2 cursor = new Vector2(destination.X, destination.Y);
 
-        //    for (int i = 0; i < text.Length; i++)
-        //    {
-        //        // Skip characters we can't render.
-        //        if (text[i] == '\r')
-        //            continue;
+            for (int i = 0; i < text.Length; i++)
+            {
+                // Skip characters we can't render.
+                if (text[i] == '\r')
+                    continue;
 
-        //        float widthOfChar = 0;
+                var character = font.Characters[text[i]];
+                float widthOfCharacter = character.Width * scale.Value.X;
+                float heightOfCharacter = character.Height * scale.Value.Y;
 
-        //        if (text[i] == '\n' || cursor.X + (widthOfChar = font[text[i]].Width * scale.Value.X) > destination.Right)
-        //        {
-        //            cursor.X = destination.X;
-        //            cursor.Y += heightOfSingleLine + font.LineSpacing;
+                if (text[i] == '\n' || cursor.X + widthOfCharacter > destination.Right)
+                {
+                    cursor.X = destination.X;
+                    cursor.Y += heightOfSingleLine + lineSpacing;
 
-        //            // If the next line extends past the destination, quit.
-        //            if (cursor.Y + heightOfSingleLine > destination.Bottom)
-        //                return cursor;
+                    // If the next line extends past the destination, quit.
+                    if (cursor.Y + heightOfSingleLine > destination.Bottom)
+                        return cursor;
 
-        //            // We can't render a new line.
-        //            if (text[i] == '\n')
-        //                continue;
-        //        }
+                    // We can't render a new line.
+                    if (text[i] == '\n')
+                        continue;
+                }
 
-        //        Vector2 characterOrigin = origin.Value;
-        //        characterOrigin.X -= cursor.X - destination.X;
-        //        characterOrigin.Y -= cursor.Y - destination.Y;
+                Vector2 characterOrigin = origin.Value;
+                characterOrigin.X -= cursor.X - destination.X + character.XOffset;
+                characterOrigin.Y -= cursor.Y - destination.Y + character.YOffset;
 
-        //        Rectangle letterSource = font[text[i]];
-        //        Rectangle letterDestination = new Rectangle((int)cursor.X + (int)characterOrigin.X, (int)cursor.Y + (int)characterOrigin.Y, (int)widthOfChar, (int)heightOfSingleLine);
+                var letterSource = character.Rectangle;
 
-        //        this.Draw(
-        //            font.Texture,
-        //            letterDestination,
-        //            letterSource,
-        //            tint,
-        //            characterOrigin,
-        //            scale,
-        //            rotation,
-        //            layerDepth);
+                var letterDestination = new Rectangle(
+                    (int)cursor.X + (int)characterOrigin.X + character.XOffset,
+                    (int)cursor.Y + (int)characterOrigin.Y + character.YOffset,
+                    (int)widthOfCharacter,
+                    (int)heightOfCharacter);
 
-        //        cursor.X += widthOfChar + font.CharacterSpacing;
-        //    }
+                this.DrawSprite(
+                    font.Texture,
+                    letterDestination,
+                    letterSource,
+                    tint,
+                    characterOrigin,
+                    scale,
+                    rotation,
+                    layerDepth);
 
-        //    return cursor;
-        //}
+                cursor.X += character.XAdvance;
+            }
+
+            return cursor;
+        }
 
         private void Flush()
         {
