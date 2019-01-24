@@ -33,7 +33,7 @@ namespace HelloWorld
 
             glfwMakeContextCurrent(window);
 
-            var context = new GraphicsContext(glfwGetProcAddress);
+            var context = new GraphicsContext(new GLBackend(glfwGetProcAddress));
 
             Init(context);
 
