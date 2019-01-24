@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Numerics;
 using System.Reflection;
 using PixelCannon;
 using static GLFWDotNet.GLFW;
@@ -60,23 +59,23 @@ namespace HelloWorld
 
         private static Texture texture;
 
-        private static void Init(GraphicsContext context)
+        private static void Init(GraphicsContext graphics)
         {
-            texture = context.LoadTexture("Box.tga");
+            texture = Texture.LoadFromFile(graphics, "Box.tga");
         }
 
-        private static void Draw(GraphicsContext context)
+        private static void Draw(GraphicsContext graphics)
         {
-            context.Clear(Color.Black);
+            graphics.Clear(Color.Black);
 
-            context.Begin();
-            context.DrawSprite(texture, new Rectangle(0, 0, texture.Width * 2, texture.Height * 2), tint: new Color(1, 1, 1, 0.2f));
-            context.End();
+            graphics.Begin();
+            graphics.DrawSprite(texture, new Rectangle(0, 0, texture.Width * 2, texture.Height * 2), tint: new Color(1, 1, 1, 0.2f));
+            graphics.End();
         }
 
-        private static void Shutdown(GraphicsContext context)
+        private static void Shutdown(GraphicsContext graphics)
         {
-            context.FreeTexture(texture);
+            texture.Dispose();
         }
     }
 }

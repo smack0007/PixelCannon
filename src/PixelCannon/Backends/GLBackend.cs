@@ -107,7 +107,7 @@ namespace PixelCannon
                 glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.Value);
             }
 
-            return new Texture((int)handle, width, height);
+            return new Texture(this, (int)handle, width, height);
         }
 
         public void FreeTexture(Texture texture)

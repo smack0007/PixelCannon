@@ -6,7 +6,7 @@ namespace PixelCannon
 {
     public class GraphicsContext
     {
-        private readonly IBackend _backend;
+        internal IBackend Backend { get; }
 
         private readonly Vertex[] _vertices;
         private int _vertexCount;
@@ -20,11 +20,11 @@ namespace PixelCannon
             if (maxVertices <= 0)
                 throw new ArgumentOutOfRangeException(nameof(maxVertices), $"{nameof(maxVertices)} must be >= 1.");
 
-            _backend = backend ?? throw new ArgumentNullException(nameof(backend));
+            Backend = backend ?? throw new ArgumentNullException(nameof(backend));
 
             _vertices = new Vertex[maxVertices];
 
-            _backend.Initialize(_vertices.Length);
+            Backend.Initialize(_vertices.Length);
         }
 
         ~GraphicsContext()
@@ -41,49 +41,12 @@ namespace PixelCannon
         private void Dispose(bool disposing)
         {
             if (disposing)
-                _backend.Dispose();
-        }
-
-        public Texture LoadTexture(string fileName)
-        {
-            IImage image = null;
-
-            if (fileName.EndsWith(".tga"))
-            {
-                image = Image.LoadTga(fileName);
-            }
-            else if (fileName.EndsWith(".png"))
-            {
-                image = Image.LoadPng(fileName);
-            }
-            
-            if (image == null)
-                throw new PixelCannonException("Unsupported image type.");
-
-            bool updateAlpha = image.BytesPerPixel != 4;
-
-            image = image.To<Rgba32>();
-
-            if (updateAlpha)
-            {
-                for (int i = 0; i < image.Length; i++)
-                    ((Image<Rgba32>)image)[i].A = 255;
-            }
-
-            using (var data = image.GetDataPointer())
-            {
-                return _backend.CreateTexture(image.Width, image.Height, data.Pointer);
-            }
-        }
-
-        public void FreeTexture(Texture texture)
-        {
-            _backend.FreeTexture(texture);
+                Backend.Dispose();
         }
 
         public void Clear(Color color)
         {
-            _backend.Clear(color);
+            Backend.Clear(color);
         }
 
         private void EnsureDrawInProgress()
@@ -387,7 +350,7 @@ namespace PixelCannon
         {
             if (_vertexCount > 0)
             {
-                _backend.Draw(_vertices, _vertexCount, _texture.Handle);
+                Backend.Draw(_vertices, _vertexCount, _texture.Handle);
                 _vertexCount = 0;
             }
         }
