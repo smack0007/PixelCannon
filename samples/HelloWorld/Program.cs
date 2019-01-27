@@ -32,7 +32,7 @@ namespace HelloWorld
 
             glfwMakeContextCurrent(window);
 
-            var context = new GraphicsContext(new GLBackend(glfwGetProcAddress));
+            var context = GraphicsContext.CreateGLContext(glfwGetProcAddress);
 
             Init(context);
 

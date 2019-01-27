@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Numerics;
-using ImageDotNet;
 
 namespace PixelCannon
 {
-    public class GraphicsContext
+    public abstract partial class GraphicsContext : DisposableObject
     {
-        internal IBackend Backend { get; }
+        public const int DefaultMaxVertices = 8192;
 
         private readonly Vertex[] _vertices;
         private int _vertexCount;
@@ -15,39 +14,19 @@ namespace PixelCannon
 
         private bool _drawInProgress;
 
-        public GraphicsContext(IBackend backend, int maxVertices = 8192)
+        internal GraphicsContext(int maxVertices)
         {
             if (maxVertices <= 0)
                 throw new ArgumentOutOfRangeException(nameof(maxVertices), $"{nameof(maxVertices)} must be >= 1.");
 
-            Backend = backend ?? throw new ArgumentNullException(nameof(backend));
-
             _vertices = new Vertex[maxVertices];
-
-            Backend.Initialize(_vertices.Length);
         }
 
-        ~GraphicsContext()
-        {
-            Dispose(false);
-        }
+        protected internal abstract Texture BackendCreateTexture(int width, int height, IntPtr? data);
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        protected internal abstract void BackendFreeTexture(Texture texture);
 
-        private void Dispose(bool disposing)
-        {
-            if (disposing)
-                Backend.Dispose();
-        }
-
-        public void Clear(Color color)
-        {
-            Backend.Clear(color);
-        }
+        protected internal abstract void BackendSetTextureData(Texture texture, IntPtr data);
 
         private void EnsureDrawInProgress()
         {
@@ -346,13 +325,22 @@ namespace PixelCannon
             return cursor;
         }
 
+        public void Clear(Color color)
+        {
+            BackendClear(color);
+        }
+
+        protected abstract void BackendClear(Color color);
+
         private void Flush()
         {
             if (_vertexCount > 0)
             {
-                Backend.Draw(_vertices, _vertexCount, _texture.Handle);
+                BackendDraw(_vertices, _vertexCount, _texture.Handle);
                 _vertexCount = 0;
             }
         }
+
+        protected abstract void BackendDraw(Vertex[] vertices, int vertexCount, int textueHandle);
     }
 }

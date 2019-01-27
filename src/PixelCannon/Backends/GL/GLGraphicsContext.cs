@@ -5,7 +5,17 @@ using static GLDotNet.GL;
 
 namespace PixelCannon
 {
-    public class GLBackend : IBackend
+    public abstract partial class GraphicsContext
+    {
+        public static GLGraphicsContext CreateGLContext(
+            Func<string, IntPtr> getProcAddress,
+            int maxVertices = DefaultMaxVertices)
+        {
+            return new GLGraphicsContext(getProcAddress, maxVertices);
+        }
+    }
+
+    public sealed class GLGraphicsContext : GraphicsContext
     {
         private uint _vertexBuffer;
         private uint _indexBuffer;
@@ -25,20 +35,11 @@ namespace PixelCannon
             M42 = 1.0f
         };
 
-        public GLBackend(Func<string, IntPtr> getProcAddress)
+        internal GLGraphicsContext(Func<string, IntPtr> getProcAddress, int maxVertices)
+            : base(maxVertices)
         {
             glInit(getProcAddress, 4, 0);
-        }
 
-        public void Dispose()
-        {
-            glDeleteBuffer(_vertexBuffer);
-            glDeleteBuffer(_indexBuffer);
-            glDeleteVertexArray(_vertexArray);
-        }
-
-        public void Initialize(int maxVertices)
-        {
             glClearColor(_clearColor.R, _clearColor.G, _clearColor.B, _clearColor.A);
 
             _vertexBuffer = glGenBuffer();
@@ -94,7 +95,14 @@ namespace PixelCannon
             glActiveTexture(GL_TEXTURE0);
         }
 
-        public Texture CreateTexture(int width, int height, IntPtr? data)
+        protected override void Dispose(bool disposing)
+        {
+            glDeleteBuffer(_vertexBuffer);
+            glDeleteBuffer(_indexBuffer);
+            glDeleteVertexArray(_vertexArray);
+        }
+
+        protected internal override Texture BackendCreateTexture(int width, int height, IntPtr? data)
         {
             uint handle = glGenTexture();
 
@@ -110,18 +118,18 @@ namespace PixelCannon
             return new Texture(this, (int)handle, width, height);
         }
 
-        public void FreeTexture(Texture texture)
+        protected internal override void BackendFreeTexture(Texture texture)
         {
             glDeleteTexture((uint)texture.Handle);
         }
 
-        public void SetTextureData(Texture texture, IntPtr data)
+        protected internal override void BackendSetTextureData(Texture texture, IntPtr data)
         {
             glBindTexture(GL_TEXTURE_2D, (uint)texture.Handle);
             glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, texture.Width, texture.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         }
 
-        public void Clear(Color color)
+        protected override void BackendClear(Color color)
         {
             if (color != _clearColor)
             {
@@ -132,7 +140,7 @@ namespace PixelCannon
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
 
-        public void Draw(Vertex[] vertices, int vertexCount, int texture)
+        protected override void BackendDraw(Vertex[] vertices, int vertexCount, int texture)
         {
             Rectangle viewport = new Rectangle();
             glGetIntegerv(GL_VIEWPORT, ref viewport.X);

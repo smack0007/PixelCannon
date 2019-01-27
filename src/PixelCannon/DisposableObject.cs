@@ -8,13 +8,13 @@ namespace PixelCannon
 
         ~DisposableObject()
         {
-            this.Dispose(false);
+            Dispose(false);
         }
 
         public void Dispose()
         {
-            this.Dispose(true);
-            this.IsDisposed = true;
+            Dispose(true);
+            IsDisposed = true;
             GC.SuppressFinalize(this);
         }
 

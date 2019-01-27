@@ -5,7 +5,7 @@ namespace PixelCannon
 {
     public sealed class Texture : DisposableObject
     {
-        private readonly IBackend _backend;
+        private readonly GraphicsContext _graphics;
 
         internal int Handle { get; }
 
@@ -13,9 +13,9 @@ namespace PixelCannon
 
         public int Height { get; }
 
-        internal Texture(IBackend backend, int handle, int width, int height)
+        internal Texture(GraphicsContext graphics, int handle, int width, int height)
         {
-            _backend = backend;
+            _graphics = graphics;
             Handle = handle;
             Width = width;
             Height = height;
@@ -23,13 +23,13 @@ namespace PixelCannon
 
         protected override void Dispose(bool disposing)
         {
-            _backend.FreeTexture(this);
+            _graphics.BackendFreeTexture(this);
         }
 
-        public static Texture LoadFromFile(GraphicsContext context, string fileName)
+        public static Texture LoadFromFile(GraphicsContext graphics, string fileName)
         {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
+            if (graphics == null)
+                throw new ArgumentNullException(nameof(graphics));
 
             if (fileName == null)
                 throw new ArgumentNullException(nameof(fileName));
@@ -60,7 +60,7 @@ namespace PixelCannon
 
             using (var data = image.GetDataPointer())
             {
-                return context.Backend.CreateTexture(image.Width, image.Height, data.Pointer);
+                return graphics.BackendCreateTexture(image.Width, image.Height, data.Pointer);
             }
         }
     }
