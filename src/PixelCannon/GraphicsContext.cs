@@ -336,11 +336,11 @@ namespace PixelCannon
         {
             if (_vertexCount > 0)
             {
-                BackendDraw(_vertices, _vertexCount, _texture.Handle);
+                BackendDraw(_vertices.AsSpan(0, _vertexCount), _texture);
                 _vertexCount = 0;
             }
         }
 
-        protected abstract void BackendDraw(Vertex[] vertices, int vertexCount, int textueHandle);
+        protected abstract void BackendDraw(ReadOnlySpan<Vertex> vertices, Texture texture);
     }
 }

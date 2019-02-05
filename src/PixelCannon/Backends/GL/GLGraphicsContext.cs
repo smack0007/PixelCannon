@@ -140,7 +140,7 @@ namespace PixelCannon
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
 
-        protected override void BackendDraw(Vertex[] vertices, int vertexCount, int texture)
+        protected override void BackendDraw(ReadOnlySpan<Vertex> vertices, Texture texture)
         {
             Rectangle viewport = new Rectangle();
             glGetIntegerv(GL_VIEWPORT, ref viewport.X);
@@ -148,7 +148,7 @@ namespace PixelCannon
             _transform.M22 = -2f / viewport.Height;
 
             glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-            glBufferData(GL_ARRAY_BUFFER, Vertex.SizeInBytes * vertexCount, vertices, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, vertices, GL_DYNAMIC_DRAW);
             GLUtility.CheckErrors(nameof(glBufferData));
 
             glBindVertexArray(_vertexArray);
@@ -159,12 +159,12 @@ namespace PixelCannon
             GLUtility.CheckErrors(nameof(glUniformMatrix4fv));
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, (uint)texture);
+            glBindTexture(GL_TEXTURE_2D, (uint)texture.Handle);
             glUniform1i(_fragSamplerLocation, 0);
             GLUtility.CheckErrors(nameof(glUniform1ui));
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer);
-            glDrawElements(GL_TRIANGLES, (vertexCount / 4) * 6, GL_UNSIGNED_SHORT, IntPtr.Zero);
+            glDrawElements(GL_TRIANGLES, (vertices.Length / 4) * 6, GL_UNSIGNED_SHORT, IntPtr.Zero);
             GLUtility.CheckErrors(nameof(glDrawElements));
         }
 
