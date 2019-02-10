@@ -102,31 +102,27 @@ namespace PixelCannon
             glDeleteVertexArray(_vertexArray);
         }
 
-        protected internal override Texture BackendCreateTexture(int width, int height, IntPtr? data)
+        protected internal override int BackendCreateTexture(int width, int height)
         {
             uint handle = glGenTexture();
 
             glBindTexture(GL_TEXTURE_2D, handle);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, IntPtr.Zero);
 
-            if (data.HasValue)
-            {
-                glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.Value);
-            }
-
-            return new Texture(this, (int)handle, width, height);
+            return (int)handle;
         }
 
-        protected internal override void BackendFreeTexture(Texture texture)
+        protected internal override void BackendFreeTexture(int texture)
         {
-            glDeleteTexture((uint)texture.Handle);
+            glDeleteTexture((uint)texture);
         }
 
-        protected internal override void BackendSetTextureData(Texture texture, IntPtr data)
+        protected internal override void BackendSetTextureData(int texture, int width, int height, IntPtr data)
         {
-            glBindTexture(GL_TEXTURE_2D, (uint)texture.Handle);
-            glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, texture.Width, texture.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            glBindTexture(GL_TEXTURE_2D, (uint)texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         }
 
         protected override void BackendClear(Color color)

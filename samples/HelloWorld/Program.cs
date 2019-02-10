@@ -61,7 +61,14 @@ namespace HelloWorld
 
         private static void Init(GraphicsContext graphics)
         {
-            texture = Texture.LoadFromFile(graphics, "Box.tga");
+            //texture = Texture.LoadFromFile(graphics, "Box.tga");
+            texture = new Texture(graphics, 2, 2);
+            texture.SetData(new byte[] {
+                255, 255, 255, 255,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                255, 255, 255, 255,
+            });
         }
 
         private static void Draw(GraphicsContext graphics)
@@ -69,7 +76,7 @@ namespace HelloWorld
             graphics.Clear(Color.Black);
 
             graphics.Begin();
-            graphics.DrawSprite(texture, new Rectangle(0, 0, texture.Width * 2, texture.Height * 2), tint: new Color(1, 1, 1, 0.2f));
+            graphics.DrawSprite(texture, new Rectangle(0, 0, 256, 256));
             graphics.End();
         }
 

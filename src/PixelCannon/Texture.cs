@@ -13,7 +13,19 @@ namespace PixelCannon
 
         public int Height { get; }
 
-        internal Texture(GraphicsContext graphics, int handle, int width, int height)
+        public Texture(GraphicsContext graphics, int width, int height, byte[] data = null)
+        {
+            _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
+            Width = width;
+            Height = height;
+
+            Handle = _graphics.BackendCreateTexture(width, height);
+
+            if (data != null)
+                SetData(data);
+        }
+
+        private Texture(GraphicsContext graphics, int handle, int width, int height)
         {
             _graphics = graphics;
             Handle = handle;
@@ -23,7 +35,7 @@ namespace PixelCannon
 
         protected override void Dispose(bool disposing)
         {
-            _graphics.BackendFreeTexture(this);
+            _graphics.BackendFreeTexture(Handle);
         }
 
         public static Texture LoadFromFile(GraphicsContext graphics, string fileName)
@@ -58,9 +70,28 @@ namespace PixelCannon
                     ((Image<Rgba32>)image)[i].A = 255;
             }
 
+            var texture = graphics.BackendCreateTexture(image.Width, image.Height);
+
             using (var data = image.GetDataPointer())
             {
-                return graphics.BackendCreateTexture(image.Width, image.Height, data.Pointer);
+                graphics.BackendSetTextureData(texture, image.Width, image.Height, data.Pointer);
+            }
+
+            return new Texture(graphics, texture, image.Width, image.Height);
+        }
+
+        public void SetData(byte[] data)
+        {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+
+            var length = Width * Height * 4;
+            if (data.Length != length)
+                throw new ArgumentException(paramName: "data", message: $"Expected array of length {length} but got {data.Length}.");
+
+            using (var dataPtr = DataPointer.Create(data))
+            {
+                _graphics.BackendSetTextureData(Handle, Width, Height, dataPtr.Pointer);
             }
         }
     }

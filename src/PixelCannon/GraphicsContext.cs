@@ -22,11 +22,11 @@ namespace PixelCannon
             _vertices = new Vertex[maxVertices];
         }
 
-        protected internal abstract Texture BackendCreateTexture(int width, int height, IntPtr? data);
+        protected internal abstract int BackendCreateTexture(int width, int height);
 
-        protected internal abstract void BackendFreeTexture(Texture texture);
+        protected internal abstract void BackendFreeTexture(int texture);
 
-        protected internal abstract void BackendSetTextureData(Texture texture, IntPtr data);
+        protected internal abstract void BackendSetTextureData(int texture, int width, int height, IntPtr data);
 
         private void EnsureDrawInProgress()
         {
