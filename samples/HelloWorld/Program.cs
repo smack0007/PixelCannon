@@ -62,13 +62,16 @@ namespace HelloWorld
         private static void Init(GraphicsContext graphics)
         {
             //texture = Texture.LoadFromFile(graphics, "Box.tga");
-            texture = new Texture(graphics, 2, 2);
-            texture.SetData(new byte[] {
-                255, 255, 255, 255,
-                0, 0, 0, 0,
-                0, 0, 0, 0,
-                255, 255, 255, 255,
-            });
+
+            //texture = new Texture(graphics, 2, 2);
+            //texture.SetData(new byte[] {
+            //    255, 255, 255, 255,
+            //    0, 0, 0, 0,
+            //    0, 0, 0, 0,
+            //    255, 255, 255, 255,
+            //});
+
+            texture = Font.Render(graphics, "OpenSans-Regular.ttf");
         }
 
         private static void Draw(GraphicsContext graphics)

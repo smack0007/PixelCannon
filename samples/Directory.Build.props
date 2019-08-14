@@ -1,8 +1,10 @@
 <Project>
-    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-    <ItemGroup>
-        <PackageReference Include="GLFWDotNet" Version="18.12.0" />
-        <ProjectReference Include="$(RepositoryRootDirectory)src\PixelCannon\PixelCannon.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="GLFWDotNet" Version="18.12.0" />
+    <ProjectReference Include="$(RepositoryRootDirectory)src\PixelCannon\PixelCannon.csproj" />
+  </ItemGroup>
+
+  <Import Project="$(RepositoryRootDirectory)build/CopyDependencies.targets" />
 </Project>
