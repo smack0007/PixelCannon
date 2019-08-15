@@ -5,6 +5,9 @@
 using System;
 using System.Runtime.InteropServices;
 
+// In the win32 DLLs longs are only 32 bit.
+using Win32Long = System.Int32;
+
 namespace PixelCannon
 {
     internal static class FreeType
@@ -53,49 +56,68 @@ namespace PixelCannon
             public IntPtr finalizier;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FT_BBox
+        {
+            [StructLayout(LayoutKind.Sequential)]
+            public struct Win32
+            {
+                public Win32Long xMin;
+                public Win32Long yMin;
+                public Win32Long xMax;
+                public Win32Long yMax;
+            }
+
+            public long xMin;
+            public long yMin;
+            public long xMax;
+            public long yMax;
+        }
+
         public class FT_Face
         {
             [StructLayout(LayoutKind.Sequential)]
-            private struct RecWin32
+            private struct Rec
             {
-                public int num_faces;
-                public int face_index;
+                [StructLayout(LayoutKind.Sequential)]
+                public struct Win32
+                {
+                    public Win32Long num_faces;
+                    public Win32Long face_index;
 
-                public int face_flags;
-                public int style_flags;
+                    public Win32Long face_flags;
+                    public Win32Long style_flags;
 
-                public int num_glyphs;
+                    public Win32Long num_glyphs;
 
-                public string family_name;
-                public string style_name;
+                    public string family_name;
+                    public string style_name;
 
-                public int num_fixed_sizes;
-                public IntPtr available_sizes;
+                    public int num_fixed_sizes;
+                    public IntPtr available_sizes;
 
-                public int num_charmaps;
-                public IntPtr charmaps;
+                    public int num_charmaps;
+                    public IntPtr charmaps;
 
-                public FT_Generic generic;
+                    public FT_Generic generic;
 
-                public int bbox_xMin;
-                public int bbox_yMin;
-                public int bbox_xMax;
-                public int bbox_yMax;
+                    public FT_BBox.Win32 bbox;
 
-                public ushort units_per_EM;
-                public short ascender;
-                public short descender;
-                public short height;
+                    public ushort units_per_EM;
+                    public short ascender;
+                    public short descender;
+                    public short height;
 
-                public short max_advance_width;
-                public short max_advance_height;
+                    public short max_advance_width;
+                    public short max_advance_height;
 
-                public short underline_position;
-                public short underline_thickness;
+                    public short underline_position;
+                    public short underline_thickness;
 
-                public IntPtr glyph;
-                public IntPtr size;
-                public IntPtr charmap;
+                    public IntPtr glyph;
+                    public IntPtr size;
+                    public IntPtr charmap;
+                }
             }
 
             internal readonly IntPtr _pointer;
@@ -107,22 +129,49 @@ namespace PixelCannon
 
             public FT_Glyph Glyph()
             {
-                var rec = Marshal.PtrToStructure<RecWin32>(_pointer);
+                var rec = Marshal.PtrToStructure<Rec.Win32>(_pointer);
                 return new FT_Glyph(rec.glyph);
             }
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct FT_MetricsWin32
+        public struct FT_Glyph_Metrics
         {
-            public int width;
-            public int height;
-            public int horiBearingX;
-            public int horiBearingY;
-            public int horiAdvance;
-            public int vertBearingX;
-            public int vertBearingY;
-            public int vertAdvance;
+            [StructLayout(LayoutKind.Sequential)]
+            public struct Win32
+            {
+                public Win32Long width;
+                public Win32Long height;
+                public Win32Long horiBearingX;
+                public Win32Long horiBearingY;
+                public Win32Long horiAdvance;
+                public Win32Long vertBearingX;
+                public Win32Long vertBearingY;
+                public Win32Long vertAdvance;
+            }
+
+            public long width;
+            public long height;
+            public long horiBearingX;
+            public long horiBearingY;
+            public long horiAdvance;
+            public long vertBearingX;
+            public long vertBearingY;
+            public long vertAdvance;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FT_Vector
+        {
+            [StructLayout(LayoutKind.Sequential)]
+            public struct Win32
+            {
+                public Win32Long x;
+                public Win32Long y;
+            }
+
+            public long x;
+            public long y;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -141,42 +190,30 @@ namespace PixelCannon
         public class FT_Glyph
         {
             [StructLayout(LayoutKind.Sequential)]
-            private struct RecWin32
+            private struct Rec
             {
-                public IntPtr library;
-                public IntPtr face;
-                public IntPtr next;
-                public uint glyph_index;
-                public FT_Generic generic;
+                [StructLayout(LayoutKind.Sequential)]
+                public struct Win32
+                {
+                    public IntPtr library;
+                    public IntPtr face;
+                    public IntPtr next;
+                    public uint glyph_index;
+                    public FT_Generic generic;
 
-                public FT_MetricsWin32 metrics;
+                    public FT_Glyph_Metrics.Win32 metrics;
 
-                public int linearHoriAdvance;
-                public int linearVertAdvance;
-                public int advance_x;
-                public int advance_y;
+                    public int linearHoriAdvance;
+                    public int linearVertAdvance;
+                    public FT_Vector.Win32 advance;
 
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-                public byte[] format;
+                    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+                    public byte[] format;
 
-                public FT_Bitmap bitmap;                                
-                public int bitmap_left;
-                public int bitmap_top;
-
-                //FT_Outline outline;
-
-                //FT_UInt num_subglyphs;
-                //FT_SubGlyph subglyphs;
-
-                //void* control_data;
-                //long control_len;
-
-                //FT_Pos lsb_delta;
-                //FT_Pos rsb_delta;
-
-                //void* other;
-
-                //FT_Slot_Internal internal;
+                    public FT_Bitmap bitmap;
+                    public int bitmap_left;
+                    public int bitmap_top;
+                }
             }
 
             internal readonly IntPtr _pointer;
@@ -189,7 +226,7 @@ namespace PixelCannon
 
             public FT_Bitmap Bitmap()
             {
-                var rec = Marshal.PtrToStructure<RecWin32>(_pointer);
+                var rec = Marshal.PtrToStructure<Rec.Win32>(_pointer);
                 return rec.bitmap;
             }
         }
