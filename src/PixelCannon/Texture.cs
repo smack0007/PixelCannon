@@ -13,7 +13,7 @@ namespace PixelCannon
 
         public int Height { get; }
 
-        public Texture(GraphicsContext graphics, int width, int height, byte[] data = null)
+        public Texture(GraphicsContext graphics, int width, int height, Pixel[] data = null)
         {
             _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
             Width = width;
@@ -80,14 +80,14 @@ namespace PixelCannon
             return new Texture(graphics, texture, image.Width, image.Height);
         }
 
-        public void SetData(byte[] data)
+        public void SetData(Pixel[] data)
         {
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
-            var length = Width * Height * 4;
+            var length = Width * Height;
             if (data.Length != length)
-                throw new ArgumentException(paramName: "data", message: $"Expected array of length {length} but got {data.Length}.");
+                throw new ArgumentException(paramName: "data", message: $"Expected pixel array of length {length} but got {data.Length}.");
 
             using (var dataPtr = DataPointer.Create(data))
             {

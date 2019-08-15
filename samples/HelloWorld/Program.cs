@@ -23,7 +23,7 @@ namespace HelloWorld
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-            var window = glfwCreateWindow(800, 600, "Hello Pixel Cannon", IntPtr.Zero, IntPtr.Zero);
+            var window = glfwCreateWindow(1024, 768, "Hello Pixel Cannon", IntPtr.Zero, IntPtr.Zero);
             if (window == IntPtr.Zero)
             {
                 Console.Error.WriteLine("Failed to create window!");
@@ -71,7 +71,7 @@ namespace HelloWorld
             //    255, 255, 255, 255,
             //});
 
-            texture = Font.Render(graphics, "OpenSans-Regular.ttf");
+            texture = Font.Render(graphics, "OpenSans-Regular.ttf", 48);
         }
 
         private static void Draw(GraphicsContext graphics)
@@ -79,7 +79,7 @@ namespace HelloWorld
             graphics.Clear(Color.Black);
 
             graphics.Begin();
-            graphics.DrawSprite(texture, new Rectangle(0, 0, 256, 256));
+            graphics.DrawSprite(texture, new Rectangle(0, 0, texture.Width, texture.Height));
             graphics.End();
         }
 
