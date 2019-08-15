@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using PixelCannon;
 using static GLFWDotNet.GLFW;
@@ -71,7 +72,7 @@ namespace HelloWorld
             //    255, 255, 255, 255,
             //});
 
-            texture = Font.Render(graphics, "OpenSans-Regular.ttf", 48);
+            texture = Font.Render(graphics, "OpenSans-Regular.ttf", 48, Enumerable.Range(32, 126 - 32).Select(x => (char)x));
         }
 
         private static void Draw(GraphicsContext graphics)

@@ -224,6 +224,22 @@ namespace PixelCannon
                 //var format = BitConverter.GetBytes(((RecWin32)_struct).format).Select(x => (char)x).Reverse().ToArray();
             }
 
+            public FT_Glyph_Metrics Metrics()
+            {
+                var rec = Marshal.PtrToStructure<Rec.Win32>(_pointer);
+                return new FT_Glyph_Metrics()
+                {
+                    width = rec.metrics.width,
+                    height = rec.metrics.height,
+                    horiBearingX = rec.metrics.horiBearingX,
+                    horiBearingY = rec.metrics.horiBearingY,
+                    horiAdvance = rec.metrics.horiAdvance,
+                    vertBearingX = rec.metrics.vertBearingX,
+                    vertBearingY = rec.metrics.vertBearingY,
+                    vertAdvance = rec.metrics.vertAdvance,
+                };
+            }
+
             public FT_Bitmap Bitmap()
             {
                 var rec = Marshal.PtrToStructure<Rec.Win32>(_pointer);

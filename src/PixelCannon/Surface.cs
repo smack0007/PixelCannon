@@ -50,9 +50,9 @@ namespace PixelCannon
         //    return new Surface(width, height, pixels);
         //}
 
-        
-
         public Pixel[] AsArray() => _pixels;
+
+        public Texture ToTexture(GraphicsContext graphics) => new Texture(graphics, Width, Height, _pixels);
 
         public void Clear(Pixel pixel)
         {
