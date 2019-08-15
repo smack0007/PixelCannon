@@ -1,0 +1,10 @@
+<Project>
+    <PropertyGroup>
+        <FreeTypeDirectory>$(MSBuildThisFileDirectory)../ext/FreeType/</FreeTypeDirectory>
+    </PropertyGroup>
+
+    <Target Name="CopyFreeType" AfterTargets="AfterBuild">        
+        <Copy SourceFiles="$(FreeTypeDirectory)win64\freetype.dll"
+              DestinationFolder="$(TargetDir)" />
+    </Target>
+</Project>
