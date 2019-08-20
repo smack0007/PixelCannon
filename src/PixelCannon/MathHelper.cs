@@ -21,7 +21,7 @@
         /// <remarks>Implementation of algorithm found at "http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2".</remarks>
         /// <param name="input"></param>
         /// <returns></returns>
-        public static uint RoundUpPowerOf2(uint input)
+        public static uint RoundNextPowerOf2(uint input)
         {
             if (input == 0)
                 return 0;
@@ -35,6 +35,13 @@
             input++;
 
             return input;
+        }
+
+        public static uint RoundClosestPowerOf2(uint input)
+        {
+            uint next = RoundNextPowerOf2(input);
+            uint prev = next >> 1;
+            return next - input < input - prev ? next : prev;
         }
 
         public static float ToDegrees(float radians)

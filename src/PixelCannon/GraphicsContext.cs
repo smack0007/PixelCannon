@@ -202,7 +202,7 @@ namespace PixelCannon
         }
 
         public Vector2 DrawString(
-            TextureFont font,
+            Font font,
             string text,
             Vector2 position,
             int lineSpacing = 0,
@@ -214,10 +214,10 @@ namespace PixelCannon
             float layerDepth = 0.0f)
         {
             if (font == null)
-                throw new ArgumentNullException("font");
+                throw new ArgumentNullException(nameof(font));
 
             if (text == null)
-                throw new ArgumentNullException("text");
+                throw new ArgumentNullException(nameof(text));
 
             if (text.Length == 0)
                 return position;
@@ -238,7 +238,7 @@ namespace PixelCannon
         }
 
         public Vector2 DrawString(
-            TextureFont font,
+            Font font,
             string text,
             Rectangle destination,
             int lineSpacing = 0,
@@ -297,15 +297,17 @@ namespace PixelCannon
                         continue;
                 }
 
-                Vector2 characterOrigin = origin.Value;
-                characterOrigin.X -= cursor.X - destination.X + character.XOffset;
-                characterOrigin.Y -= cursor.Y - destination.Y + character.YOffset;
+                var characterOffset = new Vector2(character.OffsetX * scale.Value.X, character.OffsetY * scale.Value.Y);
+
+                var characterOrigin = origin.Value;
+                characterOrigin.X -= cursor.X - destination.X + characterOffset.X;
+                characterOrigin.Y -= cursor.Y - destination.Y + characterOffset.Y;
 
                 var letterSource = character.Rectangle;
 
                 var letterDestination = new Rectangle(
-                    (int)cursor.X + (int)characterOrigin.X + character.XOffset,
-                    (int)cursor.Y + (int)characterOrigin.Y + character.YOffset,
+                    (int)(cursor.X + characterOrigin.X + characterOffset.X),
+                    (int)(cursor.Y + characterOrigin.Y + characterOffset.Y),
                     (int)widthOfCharacter,
                     (int)heightOfCharacter);
 
@@ -319,7 +321,7 @@ namespace PixelCannon
                     rotation,
                     layerDepth);
 
-                cursor.X += character.XAdvance;
+                cursor.X += character.AdvanceX;
             }
 
             return cursor;

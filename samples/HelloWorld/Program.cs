@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using PixelCannon;
 using static GLFWDotNet.GLFW;
@@ -59,10 +60,11 @@ namespace HelloWorld
         }
 
         private static Texture texture;
+        private static Font font;
 
         private static void Init(GraphicsContext graphics)
         {
-            //texture = Texture.LoadFromFile(graphics, "Box.tga");
+            texture = Texture.LoadFromFile(graphics, "Box.tga");
 
             //texture = new Texture(graphics, 2, 2);
             //texture.SetData(new byte[] {
@@ -72,7 +74,7 @@ namespace HelloWorld
             //    255, 255, 255, 255,
             //});
 
-            texture = Font.Render(graphics, "OpenSans-Regular.ttf", 48, Enumerable.Range(32, 126 - 32).Select(x => (char)x));
+            font = Font.Render(graphics, "OpenSans-Regular.ttf", 48, Enumerable.Range(32, 126 - 32).Select(x => (char)x));
         }
 
         private static void Draw(GraphicsContext graphics)
@@ -80,7 +82,8 @@ namespace HelloWorld
             graphics.Clear(Color.Black);
 
             graphics.Begin();
-            graphics.DrawSprite(texture, new Rectangle(0, 0, texture.Width, texture.Height));
+            //graphics.DrawSprite(font.Texture, Vector2.Zero);
+            graphics.DrawString(font, "goodbye World!", Vector2.Zero);
             graphics.End();
         }
 

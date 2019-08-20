@@ -240,10 +240,32 @@ namespace PixelCannon
                 };
             }
 
+            public FT_Vector Advance()
+            {
+                var rec = Marshal.PtrToStructure<Rec.Win32>(_pointer);
+                return new FT_Vector()
+                {
+                    x = rec.advance.x,
+                    y = rec.advance.y,
+                };
+            }
+
             public FT_Bitmap Bitmap()
             {
                 var rec = Marshal.PtrToStructure<Rec.Win32>(_pointer);
                 return rec.bitmap;
+            }
+
+            public int BitmapLeft()
+            {
+                var rec = Marshal.PtrToStructure<Rec.Win32>(_pointer);
+                return rec.bitmap_left;
+            }
+
+            public int BitmapTop()
+            {
+                var rec = Marshal.PtrToStructure<Rec.Win32>(_pointer);
+                return rec.bitmap_left;
             }
         }
     }
