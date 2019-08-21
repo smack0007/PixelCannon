@@ -3,6 +3,7 @@
  */
 
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 // In the win32 DLLs longs are only 32 bit.
@@ -16,7 +17,7 @@ namespace PixelCannon
         private const string Library = "freetype";
 
         public const int FT_LOAD_RENDER = (1 << 2);
-        public const long FT_OPEN_STREAM = 0x2;
+        public const uint FT_OPEN_STREAM = 0x2;
 
         [DllImport(Library)]
         public static extern int FT_Init_FreeType(out IntPtr alibrary);
@@ -24,26 +25,18 @@ namespace PixelCannon
         [DllImport(Library)]
         public static extern int FT_Done_FreeType(IntPtr library);
 
-        [DllImport(Library, EntryPoint = "FT_New_Face")]
-        private static extern int _FT_New_Face_Win32(IntPtr library, string filepathname, Win32Long face_index, out IntPtr aface);
-
-        public static int FT_New_Face(IntPtr library, string filepathname, int face_index, out FT_Face aface)
-        {
-            IntPtr afacePointer;
-            var result = _FT_New_Face_Win32(library, filepathname, face_index, out afacePointer);
-            aface = new FT_Face(afacePointer);
-            return result;
-        }
-
-        [DllImport(Library, EntryPoint = "FT_Open_Face")]
-        private static extern int _FT_Open_Face_Win32(IntPtr library, ref FT_Open_Args args, int face_index, out IntPtr aface);
-
         [DllImport(Library, EntryPoint = "FT_Open_Face")]
         private static extern int _FT_Open_Face(IntPtr library, ref FT_Open_Args args, long face_index, out IntPtr aface);
 
-        public static int FT_Open_Face(IntPtr library, ref FT_Open_Args args, long face_index, out IntPtr aface)
+        [DllImport(Library, EntryPoint = "FT_Open_Face")]
+        private static extern int _FT_Open_Face_Win32(IntPtr library, ref FT_Open_Args.Win32 args, int face_index, out IntPtr aface);
+
+        public static int FT_Open_Face(IntPtr library, FreeTypeStreamWrapper streamWrapper, long face_index, out FT_Face aface)
         {
-            return _FT_Open_Face_Win32(library, ref args, (Win32Long)face_index, out aface);
+            var args = streamWrapper.FT_Open_ArgsWin32;
+            var result = _FT_Open_Face_Win32(library, ref args, (Win32Long)face_index, out var afacePointer);
+            aface = new FT_Face(afacePointer);
+            return result;
         }
 
         [DllImport(Library, EntryPoint = "FT_Set_Pixel_Sizes")]
@@ -66,7 +59,7 @@ namespace PixelCannon
         }
 
         public delegate ulong FT_Stream_IoFunc(IntPtr stream, ulong offset, IntPtr buffer, ulong count);
-        public delegate ulong FT_Stream_IoFunc_Win32(IntPtr stream, Win32ULong offset, IntPtr buffer, Win32ULong count);
+        public delegate Win32ULong FT_Stream_IoFunc_Win32(IntPtr stream, Win32ULong offset, IntPtr buffer, Win32ULong count);
 
         public delegate void FT_Stream_CloseFunc(IntPtr stream);
 
@@ -82,8 +75,8 @@ namespace PixelCannon
 
                 public IntPtr descriptor;
                 public IntPtr pathname;
-                public FT_Stream_IoFunc_Win32 read;
-                public FT_Stream_CloseFunc close;
+                public IntPtr read;
+                public IntPtr close;
 
                 public IntPtr memory;
                 public IntPtr cursor;
@@ -96,8 +89,8 @@ namespace PixelCannon
 
             public IntPtr descriptor;
             public IntPtr pathname;
-            public FT_Stream_IoFunc read;
-            public FT_Stream_CloseFunc close;
+            public IntPtr read;
+            public IntPtr close;
 
             public IntPtr memory;
             public IntPtr cursor;
@@ -128,6 +121,79 @@ namespace PixelCannon
             public IntPtr driver;
             public int num_params;
             IntPtr @params;
+        }
+
+        // This class implements the logic for FreeType reading from .NET streams.
+        public class FreeTypeStreamWrapper : IDisposable
+        {
+            private readonly Stream _stream;
+            private readonly long _startOffset;
+
+            private readonly object _ftStream;
+            private readonly GCHandle _ftStreamHandle;
+
+            public FT_Open_Args.Win32 FT_Open_ArgsWin32 { get; }
+
+            // The properties ensure the delegates don't disappear as long as the StreamWrapper exists.
+            private FT_Stream_IoFunc IoFunc => StreamRead;
+            private FT_Stream_IoFunc_Win32 IoFuncWin32 => StreamReadWin32;
+            private FT_Stream_CloseFunc CloseFunc => StreamClose;
+
+            public FreeTypeStreamWrapper(Stream stream)
+            {
+                _stream = stream;
+                _startOffset = stream.Position;
+
+                var ftStream = new FT_Stream.Win32()
+                {
+                    @base = IntPtr.Zero,
+                    pos = 0,
+                    size = 0x7FFFFFFF, // Tells FreeType the size of the stream is unknown
+                    read = Marshal.GetFunctionPointerForDelegate(IoFuncWin32),
+                    close = Marshal.GetFunctionPointerForDelegate(CloseFunc)
+                };
+
+                _ftStream = ftStream;
+                _ftStreamHandle = GCHandle.Alloc(_ftStream, GCHandleType.Pinned);
+
+                var ftOpenArgs = new FT_Open_Args.Win32()
+                {
+                    flags = FT_OPEN_STREAM,
+                    stream = _ftStreamHandle.AddrOfPinnedObject()
+                };
+
+                FT_Open_ArgsWin32 = ftOpenArgs;
+            }
+
+            public void Dispose()
+            {
+                _stream.Seek(_startOffset, SeekOrigin.Begin);
+                _ftStreamHandle.Free();
+            }
+
+            private ulong StreamRead(IntPtr _, ulong offset, IntPtr buffer, ulong count)
+            {
+                _stream.Seek(_startOffset + (long)offset, SeekOrigin.Begin);
+
+                if (count == 0)
+                    return 0;
+
+                var temp = new byte[count];
+                var read = _stream.Read(temp, 0, (int)count);
+                Marshal.Copy(temp, 0, buffer, read);
+
+                return (ulong)read;
+            }
+
+            private Win32ULong StreamReadWin32(IntPtr _, Win32ULong offset, IntPtr buffer, Win32ULong count)
+            {
+                return (Win32ULong)StreamRead(_, offset, buffer, count);
+            }
+
+            private void StreamClose(IntPtr _)
+            {
+                // We can just ignore this one.
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]

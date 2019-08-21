@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using static PixelCannon.FreeType;
@@ -42,58 +43,76 @@ namespace PixelCannon
             LineHeight = lineHeight;
         }
 
-        public static Font Render(GraphicsContext graphics, string fontFile, uint fontSize, IEnumerable<char> characters, byte alpha = 0)
+        public static Font Render(GraphicsContext graphics, string filePath, uint fontSize, IEnumerable<char> characters, byte alpha = 0)
         {
-            FT_Init_FreeType(out IntPtr library);
+            using (var fileStream = File.OpenRead(filePath))
+                return Render(graphics, fileStream, fontSize, characters, alpha);
+        }
 
-            if (FT_New_Face(library, fontFile, 0, out var face) != 0)
-                throw new PixelCannonException("Could not open font.");
+        public static Font Render(GraphicsContext graphics, Stream stream, uint fontSize, IEnumerable<char> characters, byte alpha = 0)
+        {
+            if (graphics == null)
+                throw new ArgumentNullException(nameof(graphics));
 
-            FT_Set_Pixel_Sizes(face, 0, fontSize);
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
 
-            if (FT_Load_Char(face, 'M', FT_LOAD_RENDER) != 0)
-                throw new PixelCannonException($"Could not load character 'M'.");
-
-            var glyph = face.Glyph();
-            var metrics = glyph.Metrics();
-            var bitmap = glyph.Bitmap();
-            int fontWidth = (int)bitmap.width;
-            int fontHeight = (int)bitmap.rows;
-            int fontLineHeight = (int)(metrics.height / 64);
-
+            int fontWidth = 0;
+            int fontHeight = 0;
+            int fontLineHeight = 0;
             var characterSurfaces = new Dictionary<char, Surface>();
             var characterData = new Dictionary<char, Font.Character>();
 
-            foreach (var ch in characters)
+            FT_Init_FreeType(out IntPtr library);
+
+            using (var streamWrapper = new FreeTypeStreamWrapper(stream))
             {
-                if (FT_Load_Char(face, ch, FT_LOAD_RENDER) != 0)
-                    throw new PixelCannonException($"Could not load character '{ch}'.");
+                if (FT_Open_Face(library, streamWrapper, 0, out var face) != 0)
+                    throw new PixelCannonException("Could not open font.");
 
-                glyph = face.Glyph();
-                metrics = glyph.Metrics();
-                bitmap = glyph.Bitmap();
-                var width = (int)(metrics.width / 64);
-                var height = (int)(metrics.height / 64);
-                var offsetX = (int)(metrics.horiBearingX / 64);
-                var offsetY = fontLineHeight - (int)(metrics.horiBearingY / 64);
-                var advance = glyph.Advance();
+                FT_Set_Pixel_Sizes(face, 0, fontSize);
 
-                characterSurfaces[ch] = RenderGlyph(bitmap, alpha);
+                if (FT_Load_Char(face, 'M', FT_LOAD_RENDER) != 0)
+                    throw new PixelCannonException($"Could not load character 'M'.");
 
-                var data = new Character()
+                var glyph = face.Glyph();
+                var metrics = glyph.Metrics();
+                var bitmap = glyph.Bitmap();
+                fontWidth = (int)bitmap.width;
+                fontHeight = (int)bitmap.rows;
+                fontLineHeight = (int)(metrics.height / 64);
+
+                foreach (var ch in characters)
                 {
-                    Width = width,
-                    Height = height,
-                    OffsetX = offsetX,
-                    OffsetY = offsetY,
-                    AdvanceX = (int)(advance.x / 64),
-                    AdvanceY = (int)(advance.y / 64),
-                };
+                    if (FT_Load_Char(face, ch, FT_LOAD_RENDER) != 0)
+                        throw new PixelCannonException($"Could not load character '{ch}'.");
 
-                characterData[ch] = data;
+                    glyph = face.Glyph();
+                    metrics = glyph.Metrics();
+                    bitmap = glyph.Bitmap();
+                    var width = (int)(metrics.width / 64);
+                    var height = (int)(metrics.height / 64);
+                    var offsetX = (int)(metrics.horiBearingX / 64);
+                    var offsetY = fontLineHeight - (int)(metrics.horiBearingY / 64);
+                    var advance = glyph.Advance();
+
+                    characterSurfaces[ch] = RenderGlyph(bitmap, alpha);
+
+                    var data = new Character()
+                    {
+                        Width = width,
+                        Height = height,
+                        OffsetX = offsetX,
+                        OffsetY = offsetY,
+                        AdvanceX = (int)(advance.x / 64),
+                        AdvanceY = (int)(advance.y / 64),
+                    };
+
+                    characterData[ch] = data;
+                }
+
+                FT_Done_FreeType(library);
             }
-            
-            FT_Done_FreeType(library);
 
             var surface = RenderSheet(characterSurfaces, characterData, fontWidth, fontHeight, alpha);
 
