@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 
 // In the win32 DLLs longs are only 32 bit.
 using Win32Long = System.Int32;
+using Win32ULong = System.UInt32;
 
 namespace PixelCannon
 {
@@ -14,7 +15,8 @@ namespace PixelCannon
     {
         private const string Library = "freetype";
 
-        public const long FT_LOAD_RENDER = (1L << 2);
+        public const int FT_LOAD_RENDER = (1 << 2);
+        public const long FT_OPEN_STREAM = 0x2;
 
         [DllImport(Library)]
         public static extern int FT_Init_FreeType(out IntPtr alibrary);
@@ -23,14 +25,25 @@ namespace PixelCannon
         public static extern int FT_Done_FreeType(IntPtr library);
 
         [DllImport(Library, EntryPoint = "FT_New_Face")]
-        private static extern int _FT_New_Face(IntPtr library, string filepathname, int face_index, out IntPtr aface);
+        private static extern int _FT_New_Face_Win32(IntPtr library, string filepathname, Win32Long face_index, out IntPtr aface);
 
         public static int FT_New_Face(IntPtr library, string filepathname, int face_index, out FT_Face aface)
         {
             IntPtr afacePointer;
-            var result = _FT_New_Face(library, filepathname, face_index, out afacePointer);
+            var result = _FT_New_Face_Win32(library, filepathname, face_index, out afacePointer);
             aface = new FT_Face(afacePointer);
             return result;
+        }
+
+        [DllImport(Library, EntryPoint = "FT_Open_Face")]
+        private static extern int _FT_Open_Face_Win32(IntPtr library, ref FT_Open_Args args, int face_index, out IntPtr aface);
+
+        [DllImport(Library, EntryPoint = "FT_Open_Face")]
+        private static extern int _FT_Open_Face(IntPtr library, ref FT_Open_Args args, long face_index, out IntPtr aface);
+
+        public static int FT_Open_Face(IntPtr library, ref FT_Open_Args args, long face_index, out IntPtr aface)
+        {
+            return _FT_Open_Face_Win32(library, ref args, (Win32Long)face_index, out aface);
         }
 
         [DllImport(Library, EntryPoint = "FT_Set_Pixel_Sizes")]
@@ -42,11 +55,79 @@ namespace PixelCannon
         }
 
         [DllImport(Library, EntryPoint = "FT_Load_Char")]
-        private static extern int _FT_Load_Char(IntPtr face, ulong char_code, ulong load_flags);
+        private static extern int _FT_Load_Char(IntPtr face, ulong char_code, int load_flags);
 
-        public static int FT_Load_Char(FT_Face face, ulong char_code, ulong load_flags)
+        [DllImport(Library, EntryPoint = "FT_Load_Char")]
+        private static extern int _FT_Load_Char_Win32(IntPtr face, Win32ULong char_code, int load_flags);
+
+        public static int FT_Load_Char(FT_Face face, ulong char_code, int load_flags)
         {
-            return _FT_Load_Char(face._pointer, char_code, load_flags);
+            return _FT_Load_Char_Win32(face._pointer, (Win32ULong)char_code, load_flags);
+        }
+
+        public delegate ulong FT_Stream_IoFunc(IntPtr stream, ulong offset, IntPtr buffer, ulong count);
+        public delegate ulong FT_Stream_IoFunc_Win32(IntPtr stream, Win32ULong offset, IntPtr buffer, Win32ULong count);
+
+        public delegate void FT_Stream_CloseFunc(IntPtr stream);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FT_Stream
+        {
+            [StructLayout(LayoutKind.Sequential)]
+            public struct Win32
+            {
+                public IntPtr @base;
+                public Win32ULong size;
+                public Win32ULong pos;
+
+                public IntPtr descriptor;
+                public IntPtr pathname;
+                public FT_Stream_IoFunc_Win32 read;
+                public FT_Stream_CloseFunc close;
+
+                public IntPtr memory;
+                public IntPtr cursor;
+                public IntPtr limit;
+            }
+
+            public IntPtr @base;
+            public ulong size;
+            public ulong pos;
+
+            public IntPtr descriptor;
+            public IntPtr pathname;
+            public FT_Stream_IoFunc read;
+            public FT_Stream_CloseFunc close;
+
+            public IntPtr memory;
+            public IntPtr cursor;
+            public IntPtr limit;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FT_Open_Args
+        {
+            [StructLayout(LayoutKind.Sequential)]
+            public struct Win32
+            {
+                public uint flags;
+                public IntPtr memory_base;
+                public Win32Long memory_size;
+                public string pathname;
+                public IntPtr stream;
+                public IntPtr driver;
+                public int num_params;
+                IntPtr @params;
+            }
+
+            public uint flags;
+            public IntPtr memory_base;
+            public long memory_size;
+            public string pathname;
+            public IntPtr stream;
+            public IntPtr driver;
+            public int num_params;
+            IntPtr @params;
         }
 
         [StructLayout(LayoutKind.Sequential)]
