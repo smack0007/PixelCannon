@@ -74,7 +74,7 @@ namespace HelloWorld
             //    255, 255, 255, 255,
             //});
 
-            font = Font.Render(graphics, "OpenSans-Regular.ttf", 48, Enumerable.Range(32, 126 - 32).Select(x => (char)x));
+            font = Font.RenderFromFile(graphics, "OpenSans-Regular.ttf", 48, Enumerable.Range(32, 126 - 32).Select(x => (char)x));
         }
 
         private static void Draw(GraphicsContext graphics)

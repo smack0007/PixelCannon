@@ -43,13 +43,13 @@ namespace PixelCannon
             LineHeight = lineHeight;
         }
 
-        public static Font Render(GraphicsContext graphics, string filePath, uint fontSize, IEnumerable<char> characters, byte alpha = 0)
+        public static Font RenderFromFile(GraphicsContext graphics, string filePath, uint fontSize, IEnumerable<char> characters, byte alpha = 0)
         {
             using (var fileStream = File.OpenRead(filePath))
-                return Render(graphics, fileStream, fontSize, characters, alpha);
+                return RenderFromStream(graphics, fileStream, fontSize, characters, alpha);
         }
 
-        public static Font Render(GraphicsContext graphics, Stream stream, uint fontSize, IEnumerable<char> characters, byte alpha = 0)
+        public static Font RenderFromStream(GraphicsContext graphics, Stream stream, uint fontSize, IEnumerable<char> characters, byte alpha = 0)
         {
             if (graphics == null)
                 throw new ArgumentNullException(nameof(graphics));
