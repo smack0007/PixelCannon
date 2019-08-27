@@ -45,6 +45,12 @@ namespace PixelCannon
 
         public static Font RenderFromFile(GraphicsContext graphics, string filePath, uint fontSize, IEnumerable<char> characters, byte alpha = 0)
         {
+            if (graphics == null)
+                throw new ArgumentNullException(nameof(graphics));
+
+            if (filePath == null)
+                throw new ArgumentNullException(nameof(filePath));
+
             using (var fileStream = File.OpenRead(filePath))
                 return RenderFromStream(graphics, fileStream, fontSize, characters, alpha);
         }

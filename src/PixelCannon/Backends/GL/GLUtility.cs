@@ -2,7 +2,7 @@
 using System.Text;
 using static GLDotNet.GL;
 
-namespace PixelCannon
+namespace PixelCannon.Backends.GL
 {
     internal static class GLUtility
     {

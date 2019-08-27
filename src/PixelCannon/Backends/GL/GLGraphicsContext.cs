@@ -3,18 +3,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using static GLDotNet.GL;
 
-namespace PixelCannon
+namespace PixelCannon.Backends.GL
 {
-    public abstract partial class GraphicsContext
-    {
-        public static GLGraphicsContext CreateGLContext(
-            Func<string, IntPtr> getProcAddress,
-            int maxVertices = DefaultMaxVertices)
-        {
-            return new GLGraphicsContext(getProcAddress, maxVertices);
-        }
-    }
-
     public sealed class GLGraphicsContext : GraphicsContext
     {
         private uint _vertexBuffer;
