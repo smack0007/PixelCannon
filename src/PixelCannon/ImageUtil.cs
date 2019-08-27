@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using ImageDotNet;
 
 namespace PixelCannon
@@ -10,26 +7,16 @@ namespace PixelCannon
     {
         public static Image<Rgba32> LoadImage(Stream stream, string fileName = null)
         {
-            IImage image = null;
+            IImage image;
 
             if (fileName != null)
             {
-                if (fileName.EndsWith(".tga"))
-                {
-                    image = Image.LoadTga(stream);
-                }
-                else if (fileName.EndsWith(".png"))
-                {
-                    image = Image.LoadPng(stream);
-                }
+                image = Image.LoadByFileExtension(fileName, stream);
             }
             else
             {
-                image = Image.LoadPng(stream);
+                image = Image.Load(stream);
             }
-
-            if (image == null)
-                throw new PixelCannonException("Unsupported image type.");
 
             bool updateAlpha = image.BytesPerPixel != 4;
 
