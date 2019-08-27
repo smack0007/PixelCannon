@@ -64,7 +64,7 @@ namespace HelloWorld
 
         private static void Init(GraphicsContext graphics)
         {
-            texture = Texture.LoadFromFile(graphics, "Box.tga");
+            texture = Texture.LoadFromFile(graphics, "Box.png");
 
             //texture = new Texture(graphics, 2, 2);
             //texture.SetData(new byte[] {
@@ -82,7 +82,7 @@ namespace HelloWorld
             graphics.Clear(Color.Black);
 
             graphics.Begin();
-            //graphics.DrawSprite(font.Texture, Vector2.Zero);
+            graphics.DrawSprite(texture, Vector2.Zero);
             graphics.DrawString(font, "goodbye World!", Vector2.Zero);
             graphics.End();
         }

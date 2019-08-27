@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using ImageDotNet;
 
 namespace PixelCannon
@@ -46,29 +47,19 @@ namespace PixelCannon
             if (fileName == null)
                 throw new ArgumentNullException(nameof(fileName));
 
-            IImage image = null;
+            using (var file = File.OpenRead(fileName))
+                return LoadFromStream(graphics, file, fileName);
+        }
 
-            if (fileName.EndsWith(".tga"))
-            {
-                image = Image.LoadTga(fileName);
-            }
-            else if (fileName.EndsWith(".png"))
-            {
-                image = Image.LoadPng(fileName);
-            }
+        public static Texture LoadFromStream(GraphicsContext graphics, Stream stream, string fileName = null)
+        {
+            if (graphics == null)
+                throw new ArgumentNullException(nameof(graphics));
 
-            if (image == null)
-                throw new PixelCannonException("Unsupported image type.");
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
 
-            bool updateAlpha = image.BytesPerPixel != 4;
-
-            image = image.To<Rgba32>();
-
-            if (updateAlpha)
-            {
-                for (int i = 0; i < image.Length; i++)
-                    ((Image<Rgba32>)image)[i].A = 255;
-            }
+            var image = ImageUtil.LoadImage(stream, fileName);
 
             var texture = graphics.BackendCreateTexture(image.Width, image.Height);
 

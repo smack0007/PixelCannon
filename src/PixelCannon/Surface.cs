@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Text;
 
@@ -39,16 +40,28 @@ namespace PixelCannon
             _pixels = pixels;
         }
 
-        //public static Surface FromFile(string fileName)
-        //{
-        //    using (var file = File.OpenRead(fileName))
-        //        return FromStream(file);
-        //}
+        public static Surface LoadFromFile(string fileName)
+        {
+            using (var file = File.OpenRead(fileName))
+                return LoadFromStream(file);
+        }
 
-        //public static Surface FromStream(Stream stream)
-        //{
-        //    return new Surface(width, height, pixels);
-        //}
+        public static Surface LoadFromStream(Stream stream, string fileName = null)
+        {
+            var image = ImageUtil.LoadImage(stream, fileName);
+
+            var surface = new Surface(image.Width, image.Height);
+
+            for (int i = 0; i < image.Length; i++)
+            {
+                surface[i].R = image[i].R;
+                surface[i].G = image[i].G;
+                surface[i].B = image[i].B;
+                surface[i].A = image[i].A;
+            }
+
+            return surface;
+        }
 
         public Pixel[] AsArray() => _pixels;
 
