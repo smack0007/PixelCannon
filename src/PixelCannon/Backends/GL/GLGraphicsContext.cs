@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using static GLDotNet.GL;
+using GLDotNet.Utilities;
 
 namespace PixelCannon.Backends.GL
 {
