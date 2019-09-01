@@ -14,7 +14,7 @@ namespace PixelCannon
 {
     internal static class FreeType
     {
-        private const string Library = "freetype";
+        private const string Library = @"win-x64\freetype";
 
         public const int FT_LOAD_RENDER = (1 << 2);
         public const uint FT_OPEN_STREAM = 0x2;
