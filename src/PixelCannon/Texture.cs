@@ -4,15 +4,11 @@ using ImageDotNet;
 
 namespace PixelCannon
 {
-    public sealed class Texture : DisposableObject
+    public sealed class Texture : Sampler
     {
         private readonly GraphicsContext _graphics;
 
         internal int Handle { get; }
-
-        public int Width { get; }
-
-        public int Height { get; }
 
         public Texture(GraphicsContext graphics, int width, int height, Pixel[] data = null)
         {

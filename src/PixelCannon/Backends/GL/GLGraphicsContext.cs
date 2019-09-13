@@ -129,7 +129,7 @@ namespace PixelCannon.Backends.GL
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
 
-        protected override void BackendDraw(ReadOnlySpan<Vertex> vertices, Texture texture)
+        protected override void BackendDraw(ReadOnlySpan<Vertex> vertices, Sampler sampler)
         {
             Rectangle viewport = new Rectangle();
             glGetIntegerv(GL_VIEWPORT, ref viewport.X);
@@ -148,7 +148,12 @@ namespace PixelCannon.Backends.GL
             GLUtility.CheckErrors(nameof(glUniformMatrix4fv));
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, (uint)texture.Handle);
+
+            if (sampler is Texture texture)
+            {
+                glBindTexture(GL_TEXTURE_2D, (uint)texture.Handle);
+            }
+
             glUniform1i(_fragSamplerLocation, 0);
             GLUtility.CheckErrors(nameof(glUniform1ui));
 

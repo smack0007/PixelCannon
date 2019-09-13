@@ -10,7 +10,7 @@ namespace PixelCannon
         private readonly Vertex[] _vertices;
         private int _vertexCount;
 
-        private Texture _texture;
+        private Sampler _sampler;
 
         private bool _drawInProgress;
 
@@ -53,10 +53,10 @@ namespace PixelCannon
 
         private void CalculateUV(float x, float y, ref Vector2 uv)
         {
-            if (_texture.Width != 1 || _texture.Height != 1)
+            if (_sampler.Width != 1 || _sampler.Height != 1)
             {
-                uv.X = x / _texture.Width;
-                uv.Y = y / _texture.Height;
+                uv.X = x / _sampler.Width;
+                uv.Y = y / _sampler.Height;
             }
             else
             {
@@ -145,7 +145,7 @@ namespace PixelCannon
         }
 
         private void DrawSpriteInternal(
-            Texture texture,
+            Sampler sampler,
             ref Vector2 destination,
             int width,
             int height,
@@ -158,13 +158,13 @@ namespace PixelCannon
         {
             EnsureDrawInProgress();
 
-            if (texture != _texture)
+            if (sampler != _sampler)
                 Flush();
 
-            _texture = texture;
+            _sampler = sampler;
 
             if (source == null)
-                source = new Rectangle(0, 0, texture.Width, texture.Height);
+                source = new Rectangle(0, 0, sampler.Width, sampler.Height);
 
             if (tint == null)
                 tint = Color.White;
@@ -338,11 +338,11 @@ namespace PixelCannon
         {
             if (_vertexCount > 0)
             {
-                BackendDraw(_vertices.AsSpan(0, _vertexCount), _texture);
+                BackendDraw(_vertices.AsSpan(0, _vertexCount), _sampler);
                 _vertexCount = 0;
             }
         }
 
-        protected abstract void BackendDraw(ReadOnlySpan<Vertex> vertices, Texture texture);
+        protected abstract void BackendDraw(ReadOnlySpan<Vertex> vertices, Sampler sampler);
     }
 }
