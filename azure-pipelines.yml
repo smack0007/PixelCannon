@@ -3,21 +3,11 @@ pool:
 
 steps:
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet build'
+  displayName: 'dotnet msbuild'
   inputs:
-    projects: PixelCannon.sln
-    arguments: '/v:d /p:Configuration=Release'
-
-- task: DotNetCoreCLI@2
-  displayName: 'dotnet pack'
-  inputs:
-    command: pack
-    packagesToPack: src/PixelCannon/PixelCannon.csproj
-    buildProperties: 'Configuration=Release;BuildNumber=$(Build.BuildNumber)'
-
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: drop'
-  inputs:
-    artifactName: 'PixelCannon'
+    command: 'custom'
+    custom: 'msbuild'
+    projects: build/Build.proj
+    arguments: '-v:n'
 
 
