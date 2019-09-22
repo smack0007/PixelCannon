@@ -10,9 +10,12 @@ namespace PixelCannon
         private readonly Vertex[] _vertices;
         private int _vertexCount;
 
+        private FrameBuffer _frameBuffer;
         private Sampler _sampler;
 
         private bool _drawInProgress;
+
+        public FrameBuffer BackBuffer { get; private set; }
 
         internal GraphicsContext(int maxVertices)
         {
@@ -22,11 +25,29 @@ namespace PixelCannon
             _vertices = new Vertex[maxVertices];
         }
 
+        protected void Initialize()
+        {
+            BackBuffer = FrameBuffer.CreateBackBuffer();
+        }
+
+        protected internal abstract int BackendCreateFrameBuffer(bool isBackBuffer, int width, int height);
+
+        protected internal abstract void BackendFreeFrameBuffer(int frameBuffer);
+
+        protected internal abstract void BackendSetFrameBufferData(int frameBuffer, int width, int height, IntPtr data);
+
         protected internal abstract int BackendCreateTexture(int width, int height);
 
         protected internal abstract void BackendFreeTexture(int texture);
 
         protected internal abstract void BackendSetTextureData(int texture, int width, int height, IntPtr data);
+
+        public void Clear(FrameBuffer frameBuffer, Color color)
+        {
+            BackendClear(frameBuffer, color);
+        }
+
+        protected abstract void BackendClear(FrameBuffer frameBuffer, Color color);
 
         private void EnsureDrawInProgress()
         {
@@ -39,6 +60,8 @@ namespace PixelCannon
             if (_drawInProgress)
                 throw new InvalidOperationException("Draw already in progress.");
 
+            _frameBuffer = BackBuffer;
+
             _drawInProgress = true;
         }
 
@@ -47,6 +70,9 @@ namespace PixelCannon
             EnsureDrawInProgress();
 
             Flush();
+
+            _frameBuffer = null;
+            _sampler = null;
 
             _drawInProgress = false;
         }
@@ -97,7 +123,8 @@ namespace PixelCannon
         }
 
         public void DrawSprite(
-            Texture texture,
+            FrameBuffer frameBuffer,
+            Sampler sampler,
             Vector2 destination,
             Rectangle? source = null,
             Color? tint = null,
@@ -107,10 +134,11 @@ namespace PixelCannon
             float layerDepth = 0.0f)
         {
             DrawSpriteInternal(
-                texture,
+                frameBuffer,
+                sampler,
                 ref destination,
-                source != null ? source.Value.Width : texture.Width,
-                source != null ? source.Value.Height : texture.Height,
+                source != null ? source.Value.Width : sampler.Width,
+                source != null ? source.Value.Height : sampler.Height,
                 source,
                 tint,
                 origin,
@@ -120,7 +148,8 @@ namespace PixelCannon
         }
 
         public void DrawSprite(
-            Texture texture,
+            FrameBuffer frameBuffer,
+            Sampler sampler,
             Rectangle destination,
             Rectangle? source = null,
             Color? tint = null,
@@ -132,7 +161,8 @@ namespace PixelCannon
             var vecDestination = new Vector2(destination.X, destination.Y);
 
             DrawSpriteInternal(
-                texture,
+                frameBuffer,
+                sampler,
                 ref vecDestination,
                 destination.Width,
                 destination.Height,
@@ -142,9 +172,11 @@ namespace PixelCannon
                 scale,
                 rotation,
                 layerDepth);
+            ;
         }
 
         private void DrawSpriteInternal(
+            FrameBuffer frameBuffer,
             Sampler sampler,
             ref Vector2 destination,
             int width,
@@ -158,9 +190,10 @@ namespace PixelCannon
         {
             EnsureDrawInProgress();
 
-            if (sampler != _sampler)
+            if (frameBuffer != _frameBuffer || sampler != _sampler)
                 Flush();
 
+            _frameBuffer = frameBuffer;
             _sampler = sampler;
 
             if (source == null)
@@ -202,6 +235,7 @@ namespace PixelCannon
         }
 
         public Vector2 DrawString(
+            FrameBuffer frameBuffer,
             Font font,
             string text,
             Vector2 position,
@@ -226,6 +260,7 @@ namespace PixelCannon
                 textSize = font.MeasureString(text);
 
             return DrawString(
+                frameBuffer,
                 font,
                 text,
                 new Rectangle((int)position.X, (int)position.Y, textSize.Value.Width, textSize.Value.Height),
@@ -238,6 +273,7 @@ namespace PixelCannon
         }
 
         public Vector2 DrawString(
+            FrameBuffer frameBuffer,
             Font font,
             string text,
             Rectangle destination,
@@ -249,10 +285,10 @@ namespace PixelCannon
             float layerDepth = 0.0f)
         {
             if (font == null)
-                throw new ArgumentNullException("font");
+                throw new ArgumentNullException(nameof(font));
 
             if (text == null)
-                throw new ArgumentNullException("text");
+                throw new ArgumentNullException(nameof(text));
 
             if (text.Length == 0)
                 return new Vector2(destination.X, destination.Y);
@@ -312,6 +348,7 @@ namespace PixelCannon
                     (int)heightOfCharacter);
 
                 DrawSprite(
+                    frameBuffer,
                     font.Texture,
                     letterDestination,
                     letterSource,
@@ -327,22 +364,18 @@ namespace PixelCannon
             return cursor;
         }
 
-        public void Clear(Color color)
-        {
-            BackendClear(color);
-        }
-
-        protected abstract void BackendClear(Color color);
-
         private void Flush()
         {
             if (_vertexCount > 0)
             {
-                BackendDraw(_vertices.AsSpan(0, _vertexCount), _sampler);
+                BackendDraw(_frameBuffer, _vertices.AsSpan(0, _vertexCount), _sampler);
                 _vertexCount = 0;
             }
         }
 
-        protected abstract void BackendDraw(ReadOnlySpan<Vertex> vertices, Sampler sampler);
+        protected abstract void BackendDraw(
+            FrameBuffer frameBuffer,
+            ReadOnlySpan<Vertex> vertices,
+            Sampler sampler);
     }
 }

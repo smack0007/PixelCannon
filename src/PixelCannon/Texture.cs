@@ -8,9 +8,12 @@ namespace PixelCannon
     {
         private readonly GraphicsContext _graphics;
 
-        internal int Handle { get; }
+        public override int Width { get; }
+
+        public override int Height { get; }
 
         public Texture(GraphicsContext graphics, int width, int height, Pixel[] data = null)
+            : base()
         {
             _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
             Width = width;
@@ -72,9 +75,7 @@ namespace PixelCannon
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
-            var length = Width * Height;
-            if (data.Length != length)
-                throw new ArgumentException(paramName: "data", message: $"Expected pixel array of length {length} but got {data.Length}.");
+            EnsurePixelData(data);
 
             using (var dataPtr = DataPointer.Create(data))
             {

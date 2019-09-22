@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GLDotNet" Version="19.8.1" />
+    <PackageReference Include="GLDotNet" Version="19.9.0" />
     <PackageReference Include="ImageDotNet" Version="19.1.0" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
   </ItemGroup>
